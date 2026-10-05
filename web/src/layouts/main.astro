@@ -24,14 +24,19 @@ const description = seo?.description ?? defaults.description ?? settings?.siteDe
 const image = seo?.image ?? defaults.image;
 const noIndex = seo?.noIndex ?? defaults.noIndex;
 const absolute = (path: string) => (Astro.site ? new URL(path, Astro.site).href : path);
+const alternates = Object.entries<string>(ctx.alternates);
 ---
 
 <html lang={ctx.lang}>
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+		<meta name="apple-mobile-web-app-title" content="Formwise" />
+		<link rel="manifest" href="/favicon/site.webmanifest" />
 		<link rel="preload" href="/fonts/TWKLausannePan/Web/TWKLausannePan-250.woff2" as="font" type="font/woff2" crossorigin />
 		<link rel="preload" href="/fonts/TWKLausannePan/Web/TWKLausannePan-400.woff2" as="font" type="font/woff2" crossorigin />
 
@@ -40,7 +45,7 @@ const absolute = (path: string) => (Astro.site ? new URL(path, Astro.site).href 
 		{noIndex && <meta name="robots" content="noindex" />}
 		{Astro.site && <link rel="canonical" href={absolute(Astro.url.pathname)} />}
 		{
-			Object.entries(ctx.alternates).map(([lang, href]) => (
+			alternates.map(([lang, href]) => (
 				<link rel="alternate" hreflang={lang} href={absolute(href)} />
 			))
 		}
