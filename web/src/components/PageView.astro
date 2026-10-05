@@ -1,0 +1,33 @@
+---
+import Layout from '../layouts/main.astro';
+import type { SiteContext } from '../lib/data';
+import type { Page } from '../lib/types';
+import PageHeader from './sections/PageHeader.astro';
+import SectionRenderer from './sections/SectionRenderer.astro';
+
+interface Props {
+	page: Page;
+	ctx: SiteContext;
+}
+const { page, ctx } = Astro.props;
+const sections = page.sections ?? [];
+const HEADER_TYPES = ['heroSection', 'pageHeaderSection'];
+
+// Every page opens with a blue header card; pages without one get a simple header with their title
+const [first, ...rest] = sections;
+const hasHeader = first && HEADER_TYPES.includes(first._type);
+const body = hasHeader ? rest : sections;
+---
+
+<Layout ctx={ctx} title={page.title} seo={page.seo}>
+	{
+		hasHeader ? (
+			<SectionRenderer sections={[first]} ctx={ctx} />
+		) : (
+			<PageHeader section={{ heading: page.title }} ctx={ctx} />
+		)
+	}
+	<main id="content">
+		<SectionRenderer sections={body} ctx={ctx} />
+	</main>
+</Layout>

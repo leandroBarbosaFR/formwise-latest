@@ -1,0 +1,38 @@
+---
+// Figma avatars stack two photos inside a circular mask; each layer is
+// centred and then nudged by (dx, dy).
+interface Layer {
+	src: string;
+	w: number;
+	h: number;
+	dx?: number;
+	dy?: number;
+}
+interface Props {
+	size: number;
+	under: Layer;
+	over: Layer;
+	bg?: string;
+	class?: string;
+	style?: string;
+}
+const { size, under, over, bg = '#e4e4e4', class: className, style = '' } = Astro.props;
+const place = ({ w, h, dx = 0, dy = 0 }: Layer) =>
+	`width:${w}px;height:${h}px;left:calc(50% + ${dx}px);top:calc(50% + ${dy}px)`;
+---
+
+<div
+	class:list={[className?.includes('absolute') ? null : 'relative', 'shrink-0 overflow-clip rounded-full', className]}
+	style={`width:${size}px;height:${size}px;background-color:${bg};${style}`}
+>
+	{
+		[under, over].map((layer) => (
+			<img
+				src={layer.src}
+				alt=""
+				class="pointer-events-none absolute max-w-none -translate-1/2 object-cover"
+				style={place(layer)}
+			/>
+		))
+	}
+</div>

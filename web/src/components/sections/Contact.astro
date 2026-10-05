@@ -1,0 +1,110 @@
+---
+import type { SiteContext } from '../../lib/data';
+import type { Section } from '../../lib/types';
+
+interface Props {
+	section: Section;
+	ctx: SiteContext;
+}
+const { section, ctx } = Astro.props;
+const { settings } = ctx.layout;
+const labels = section.labels ?? {};
+const endpoint: string | undefined = section.formEndpoint;
+// Without a form service the browser opens the visitor's email app
+const action = endpoint ?? (settings?.email ? `mailto:${settings.email}` : undefined);
+
+const details = [
+	settings?.email && { label: labels.email ?? 'Email', value: settings.email, href: `mailto:${settings.email}` },
+	settings?.phone && { label: labels.phone ?? 'Phone', value: settings.phone, href: `tel:${settings.phone.replace(/\s/g, '')}` },
+	settings?.address && { label: labels.address ?? 'Address', value: settings.address },
+].filter(Boolean) as { label: string; value: string; href?: string }[];
+
+const field =
+	'w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm text-ink transition outline-none placeholder:text-slate focus:border-brand focus:ring-2 focus:ring-brand/15';
+---
+
+<section id={section.anchorId ?? 'contact'} class="mx-auto max-w-[1440px] px-6 py-20 lg:py-[120px]">
+	<div class="grid gap-12 lg:grid-cols-[1fr_1.2fr] lg:gap-20">
+		<div class="flex flex-col gap-6">
+			{section.heading && <h2 class="type-h2 max-w-[480px]">{section.heading}</h2>}
+			{section.text && <p class="type-body max-w-[395px]">{section.text}</p>}
+			{
+				details.length > 0 && (
+					<dl class="mt-4 flex flex-col divide-y divide-black/10 border-y border-black/10">
+						{details.map((detail) => (
+							<div class="flex flex-col gap-1 py-5">
+								<dt class="type-small text-slate">{detail.label}</dt>
+								<dd class="text-lg leading-[1.3] tracking-[-0.02em] whitespace-pre-line">
+									{detail.href ? (
+										<a href={detail.href} class="transition hover:text-brand">
+											{detail.value}
+										</a>
+									) : (
+										detail.value
+									)}
+								</dd>
+							</div>
+						))}
+					</dl>
+				)
+			}
+		</div>
+
+		<form
+			action={action}
+			method="post"
+			enctype={endpoint ? undefined : 'text/plain'}
+			data-contact-form={endpoint ? '' : undefined}
+			class="flex flex-col gap-4 rounded-2xl border border-black/10 p-6 sm:p-8"
+		>
+			<div class="grid gap-4 sm:grid-cols-2">
+				<label class="flex flex-col gap-2 text-sm">
+					{labels.name ?? 'Name'}
+					<input name="name" required autocomplete="name" class={field} />
+				</label>
+				<label class="flex flex-col gap-2 text-sm">
+					{labels.email ?? 'Email'}
+					<input name="email" type="email" required autocomplete="email" class={field} />
+				</label>
+			</div>
+			<label class="flex flex-col gap-2 text-sm">
+				{labels.organization ?? 'Association'}
+				<input name="organization" autocomplete="organization" class={field} />
+			</label>
+			<label class="flex flex-col gap-2 text-sm">
+				{labels.message ?? 'Message'}
+				<textarea name="message" required rows="6" class:list={[field, 'resize-y']}></textarea>
+			</label>
+			<button
+				type="submit"
+				class="mt-2 flex h-10 items-center justify-center self-start rounded-full bg-brand px-[18px] text-sm text-white transition hover:bg-brand/90 disabled:opacity-60"
+			>
+				{labels.submit ?? 'Send message'}
+			</button>
+			<p data-success hidden class="type-body rounded-xl bg-brand-soft px-4 py-3 text-brand">
+				{settings?.strings?.formSuccess}
+			</p>
+		</form>
+	</div>
+</section>
+
+<script>
+	// Form services such as Formspree accept JSON submissions, so the visitor stays on the page
+	document.querySelectorAll<HTMLFormElement>('[data-contact-form]').forEach((form) => {
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			const button = form.querySelector('button');
+			button?.setAttribute('disabled', '');
+			const response = await fetch(form.action, {
+				method: 'POST',
+				body: new FormData(form),
+				headers: { Accept: 'application/json' },
+			}).catch(() => null);
+			button?.removeAttribute('disabled');
+			if (response?.ok) {
+				form.reset();
+				form.querySelector<HTMLElement>('[data-success]')?.removeAttribute('hidden');
+			}
+		});
+	});
+</script>

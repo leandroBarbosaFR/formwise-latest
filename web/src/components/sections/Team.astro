@@ -1,0 +1,37 @@
+---
+import { hasImage, urlFor } from '../../lib/sanity';
+import type { Section } from '../../lib/types';
+
+interface Props {
+	section: Section;
+}
+const { section } = Astro.props;
+const members: { _key: string; name: string; role?: string; photo?: any }[] = section.members ?? [];
+---
+
+<section id={section.anchorId} class="mx-auto flex max-w-[1440px] flex-col items-center gap-8 px-6 py-20 lg:py-[120px]">
+	{section.heading && <h2 class="type-h2 max-w-[561px] text-center">{section.heading}</h2>}
+	{section.text && <p class="type-body max-w-[395px] text-center">{section.text}</p>}
+	<ul class="grid w-full grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
+		{
+			members.map((member) => (
+				<li class="flex flex-col gap-4">
+					<div class="relative aspect-[4/5] overflow-clip rounded-2xl bg-brand-soft">
+						{hasImage(member.photo) && (
+							<img
+								src={urlFor(member.photo).width(640).height(800).fit('crop').url()}
+								alt={member.name}
+								loading="lazy"
+								class="absolute inset-0 size-full object-cover"
+							/>
+						)}
+					</div>
+					<div class="flex flex-col gap-1">
+						<p class="text-lg leading-[1.2] tracking-[-0.02em]">{member.name}</p>
+						{member.role && <p class="type-small text-slate">{member.role}</p>}
+					</div>
+				</li>
+			))
+		}
+	</ul>
+</section>

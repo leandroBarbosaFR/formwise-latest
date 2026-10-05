@@ -1,0 +1,25 @@
+---
+import { getLanguages } from '../lib/data';
+import { BASE_LANGUAGE } from '../lib/languages';
+
+// Static hosting has no server to read Accept-Language, so the browser picks the language
+const languages = await getLanguages();
+---
+
+<html lang={BASE_LANGUAGE}>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="robots" content="noindex" />
+		<meta http-equiv="refresh" content={`1; url=/${BASE_LANGUAGE}/`} />
+		<link rel="canonical" href={`/${BASE_LANGUAGE}/`} />
+		<title>Formwise</title>
+		<script is:inline define:vars={{ languages, fallback: BASE_LANGUAGE }}>
+			const preferred = (navigator.languages ?? [navigator.language]).map((l) => l.slice(0, 2).toLowerCase());
+			const match = preferred.find((l) => languages.includes(l)) ?? fallback;
+			location.replace(`/${match}/`);
+		</script>
+	</head>
+	<body>
+		<a href={`/${BASE_LANGUAGE}/`}>Formwise</a>
+	</body>
+</html>

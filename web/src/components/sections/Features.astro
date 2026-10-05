@@ -1,0 +1,177 @@
+---
+import type { Section } from '../../lib/types';
+import Avatar from './Avatar.astro';
+
+interface Props {
+	section: Section;
+}
+const { section } = Astro.props;
+
+const img = (name: string) => `/figma/${name}`;
+
+const members = [
+	{
+		name: 'Julien Amare',
+		under: { src: img('avatar-117.png'), w: 66, h: 99, dx: 1, dy: 16.5 },
+		over: { src: img('avatar-121.png'), w: 40, h: 40 },
+	},
+	{
+		name: 'Claire Bernard',
+		under: { src: img('avatar-115.png'), w: 96, h: 96, dy: 16 },
+		over: { src: img('avatar-122.png'), w: 40, h: 40 },
+	},
+	{
+		name: 'Marie Dupont',
+		under: { src: img('avatar-116.png'), w: 84, h: 137, dy: 26.5 },
+		over: { src: img('avatar-123.png'), w: 40, h: 40 },
+	},
+	{
+		name: 'Jean Dupuis',
+		bg: '#227aca',
+		under: { src: img('avatar-118.png'), w: 56, h: 56, dx: -8, dy: 8 },
+		over: { src: img('avatar-124.png'), w: 40, h: 40 },
+	},
+];
+
+// Avatars floating around the payment chip, positioned within the 332×352 card
+const payers = [
+	{
+		left: 40, top: 201, size: 40,
+		under: { src: img('avatar-119.png'), w: 126, h: 101, dx: -2, dy: 15.5 },
+		over: { src: img('avatar-123.png'), w: 40, h: 40 },
+	},
+	{
+		left: 83, top: 101, size: 23.061,
+		under: { src: img('avatar-117.png'), w: 38.05, h: 57.075, dx: 0.58, dy: 9.51 },
+		over: { src: img('avatar-121.png'), w: 23, h: 23, dx: -0.03, dy: -0.03 },
+	},
+	{
+		left: 217, top: 93, size: 40,
+		under: { src: img('avatar-115.png'), w: 96, h: 96, dy: 16 },
+		over: { src: img('avatar-122.png'), w: 40, h: 40 },
+	},
+	{
+		left: 240, top: 175, size: 52.332,
+		under: { src: img('avatar-116.png'), w: 110.099, h: 178.91, dx: 0.1, dy: 34.51 },
+		over: { src: img('avatar-124.png'), w: 52, h: 52, dx: -0.17, dy: -0.17 },
+	},
+	{
+		left: 131, top: 241, size: 70, bg: '#227aca',
+		under: { src: img('avatar-118.png'), w: 98, h: 98, dx: -14, dy: 14 },
+		over: { src: img('avatar-125.png'), w: 70, h: 70 },
+	},
+];
+
+// Illustrations are part of the design; only the captions come from Sanity.
+// Each card shares the same base photo, then a heavily blurred photo stack
+// offset differently so every card picks up a different part of the colour field.
+const backgrounds = [
+	{ blurLeft: -375, blurTop: -131, blurLayers: ['feat-blur-1.jpg'] },
+	{ blurLeft: -1399.67, blurTop: -305, blurLayers: ['feat-blur-1.jpg', 'feat-blur-2.jpg'] },
+	{ blurLeft: -1045.33, blurTop: -163, blurLayers: ['feat-blur-1.jpg', 'feat-blur-2.jpg', 'feat-blur-3.jpg'] },
+];
+
+
+const cards: { _key: string; illustration: string; title: string; text?: string }[] = section.cards ?? [];
+
+const panel = 'absolute top-1/2 left-1/2 h-[352px] w-[332px] -translate-1/2 overflow-clip rounded-xl bg-white';
+---
+
+<section id={section.anchorId} class="mx-auto flex max-w-[1440px] flex-col items-center px-6 py-20 lg:py-[120px]">
+	{section.heading && <h2 class="type-h2 max-w-[561px] text-center">{section.heading}</h2>}
+	{section.text && <p class="type-body mt-6 max-w-[395px] text-center">{section.text}</p>}
+
+	<div class="mt-10 grid w-full grid-cols-1 gap-5 lg:grid-cols-3">
+		{
+			cards.map((card, i) => {
+				const background = backgrounds[i % backgrounds.length];
+				return (
+				<div class="flex flex-col gap-5">
+					<div class="relative h-[504px] overflow-clip rounded-2xl bg-brand" aria-hidden="true">
+						<img
+							src={img('dash-bg.png')}
+							alt=""
+							class="absolute top-[-94px] left-[-710px] h-[1023px] w-[1534px] max-w-none object-cover"
+						/>
+						<div
+							class="absolute h-[1358px] w-[2037px] blur-[102px]"
+							style={`left:${background.blurLeft}px;top:${background.blurTop}px`}
+						>
+							{background.blurLayers.map((layer) => (
+								<img src={img(layer)} alt="" class="absolute inset-0 size-full max-w-none object-cover" />
+							))}
+						</div>
+
+						{card.illustration === 'members' && (
+							<div class:list={[panel, 'flex flex-col gap-4 p-6']}>
+								<p class="type-h4">Your Members</p>
+								<ul class="flex flex-col gap-[33px]">
+									{members.map((m) => (
+										<li class="flex items-center gap-3">
+											<Avatar size={40} bg={m.bg} under={m.under} over={m.over} />
+											<div class="flex flex-1 flex-col gap-1">
+												<p class="text-base leading-[1.2] tracking-[-0.02em]">{m.name}</p>
+												<p class="type-small text-slate">Member since 2026</p>
+											</div>
+											<span class="rounded bg-brand-soft px-2 py-1 text-xs leading-[1.3] font-demi text-brand">
+												Active
+											</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						)}
+
+						{card.illustration === 'payments' && (
+							<div class={panel}>
+								<p class="type-h4 absolute top-6 right-6 left-6">Membership Payments</p>
+								<div class="absolute top-1/2 left-1/2 flex h-[68px] -translate-1/2 items-center rounded-[9.714px] border-[1.214px] border-black/10 bg-white p-[19.429px]">
+									<div class="flex w-[172.429px] items-center justify-between">
+										<span class="flex w-[75.286px] items-center justify-center rounded-[4.857px] bg-[#def5dc] px-[9.714px] py-[4.857px] text-[14.571px] leading-[1.3] font-demi text-[#0a8502]">
+											Paid
+										</span>
+										<p class="text-[19.429px] leading-[1.2] tracking-[-0.02em]">€ 20,00</p>
+									</div>
+								</div>
+								{payers.map((p) => (
+									<Avatar
+										size={p.size}
+										bg={p.bg}
+										under={p.under}
+										over={p.over}
+										class="absolute"
+										style={`left:${p.left}px;top:${p.top}px`}
+									/>
+								))}
+							</div>
+						)}
+
+						{card.illustration === 'donations' && (
+							<>
+								<div class={panel}>
+									<img src={img('donation-ellipse-11.svg')} alt="" class="absolute top-1/2 left-[calc(50%-0.33px)] size-[296px] max-w-none -translate-1/2" />
+									<img src={img('donation-ellipse-12.svg')} alt="" class="absolute top-1/2 left-[calc(50%-0.33px)] size-[416px] max-w-none -translate-1/2" />
+									<img src={img('donation-ellipse-10.svg')} alt="" class="absolute top-1/2 left-[calc(50%-0.33px)] size-[190px] max-w-none -translate-1/2" />
+									<div class="absolute top-0 left-0 h-[304px] w-full bg-linear-to-b from-white/80 to-white/0" />
+									<div class="absolute bottom-0 left-0 h-[304px] w-full bg-linear-to-t from-white/80 to-white/0" />
+									<p class="type-h4 absolute top-6 right-6 left-6">Donations</p>
+									<img src={img('donation-heart.svg')} alt="" class="absolute top-1/2 left-[calc(50%-0.33px)] size-[120px] -translate-1/2" />
+								</div>
+								<div class="absolute top-[311px] left-[calc(50%+0.33px)] flex w-[168px] -translate-x-1/2 flex-col items-center gap-0.5 text-center">
+									<p class="text-base leading-[1.2] tracking-[-0.02em]">€ 56,000.00</p>
+									<p class="type-small text-slate">268 donors</p>
+								</div>
+							</>
+						)}
+					</div>
+
+					<div class="flex flex-col gap-2">
+						<h3 class="type-h4">{card.title}</h3>
+						{card.text && <p class="type-body max-w-[395px]">{card.text}</p>}
+					</div>
+				</div>
+				);
+			})
+		}
+	</div>
+</section>

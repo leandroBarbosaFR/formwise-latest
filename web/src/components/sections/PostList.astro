@@ -1,0 +1,88 @@
+---
+import { sanityClient } from 'sanity:client';
+import type { SiteContext } from '../../lib/data';
+import { POSTS_QUERY } from '../../lib/queries';
+import type { PostCard as PostCardData, Section } from '../../lib/types';
+import PostCard from './PostCard.astro';
+
+interface Props {
+	section: Section;
+	ctx: SiteContext;
+}
+const { section, ctx } = Astro.props;
+const strings = ctx.layout.settings?.strings ?? {};
+
+const allPosts = await sanityClient.fetch<PostCardData[]>(POSTS_QUERY, {
+	lang: ctx.lang,
+	categoryIds: section.categoryIds?.filter(Boolean)?.length ? section.categoryIds : null,
+});
+const posts = section.limit ? allPosts.slice(0, section.limit) : allPosts;
+
+// Category filter chips, only on the full list
+const categories = section.limit
+	? []
+	: [...new Map(posts.flatMap((p) => p.categories ?? []).filter(Boolean).map((c) => [c._id, c])).values()];
+---
+
+<section id={section.anchorId} class="mx-auto flex max-w-[1440px] flex-col gap-10 px-6 py-20 lg:py-[120px]" data-post-list>
+	{
+		(section.heading || section.text) && (
+			<div class="flex flex-col items-center gap-6 text-center">
+				{section.heading && <h2 class="type-h2 max-w-[561px]">{section.heading}</h2>}
+				{section.text && <p class="type-body max-w-[395px]">{section.text}</p>}
+			</div>
+		)
+	}
+
+	{
+		categories.length > 1 && (
+			<div class="flex flex-wrap justify-center gap-2" role="group">
+				<button type="button" data-filter="" aria-pressed="true" class="filter-chip">
+					{strings.allCategories ?? 'All'}
+				</button>
+				{categories.map((category) => (
+					<button type="button" data-filter={category._id} aria-pressed="false" class="filter-chip">
+						{category.title}
+					</button>
+				))}
+			</div>
+		)
+	}
+
+	{
+		posts.length > 0 ? (
+			<div class="grid grid-cols-1 gap-x-5 gap-y-14 md:grid-cols-2 lg:grid-cols-3">
+				{posts.map((post) => (
+					<PostCard post={post} ctx={ctx} />
+				))}
+			</div>
+		) : (
+			<p class="type-body text-center text-slate">{strings.noPosts}</p>
+		)
+	}
+</section>
+
+<style>
+	@reference "../../styles/global.css";
+	.filter-chip {
+		@apply h-10 rounded-full border border-black/10 px-[18px] text-sm transition hover:border-black;
+	}
+	.filter-chip[aria-pressed='true'] {
+		@apply border-brand bg-brand text-white;
+	}
+</style>
+
+<script>
+	document.querySelectorAll<HTMLElement>('[data-post-list]').forEach((list) => {
+		const chips = list.querySelectorAll<HTMLButtonElement>('[data-filter]');
+		chips.forEach((chip) =>
+			chip.addEventListener('click', () => {
+				const id = chip.dataset.filter;
+				chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+				list.querySelectorAll<HTMLElement>('[data-categories]').forEach((card) => {
+					card.hidden = Boolean(id) && !card.dataset.categories?.split(' ').includes(id!);
+				});
+			}),
+		);
+	});
+</script>

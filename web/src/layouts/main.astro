@@ -1,0 +1,83 @@
+---
+import '../styles/global.css';
+import Footer from '../components/sections/Footer.astro';
+import type { SiteContext } from '../lib/data';
+import { BASE_LANGUAGE } from '../lib/languages';
+import { urlFor } from '../lib/sanity';
+import type { Seo } from '../lib/types';
+
+interface Props {
+	ctx: SiteContext;
+	title?: string;
+	seo?: Seo;
+	// Article metadata for blog posts
+	type?: 'website' | 'article';
+}
+const { ctx, title, seo, type = 'website' } = Astro.props;
+const { settings } = ctx.layout;
+const defaults = settings?.seo ?? {};
+
+const siteName = settings?.siteName ?? 'Formwise';
+const pageTitle = seo?.title ?? title;
+const fullTitle = pageTitle && pageTitle !== siteName ? `${pageTitle} · ${siteName}` : siteName;
+const description = seo?.description ?? defaults.description ?? settings?.siteDescription;
+const image = seo?.image ?? defaults.image;
+const noIndex = seo?.noIndex ?? defaults.noIndex;
+const absolute = (path: string) => (Astro.site ? new URL(path, Astro.site).href : path);
+---
+
+<html lang={ctx.lang}>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<link rel="preload" href="/fonts/TWKLausannePan/Web/TWKLausannePan-250.woff2" as="font" type="font/woff2" crossorigin />
+		<link rel="preload" href="/fonts/TWKLausannePan/Web/TWKLausannePan-400.woff2" as="font" type="font/woff2" crossorigin />
+
+		<title>{fullTitle}</title>
+		{description && <meta name="description" content={description} />}
+		{noIndex && <meta name="robots" content="noindex" />}
+		{Astro.site && <link rel="canonical" href={absolute(Astro.url.pathname)} />}
+		{
+			Object.entries(ctx.alternates).map(([lang, href]) => (
+				<link rel="alternate" hreflang={lang} href={absolute(href)} />
+			))
+		}
+		{
+			ctx.alternates[BASE_LANGUAGE] && (
+				<link rel="alternate" hreflang="x-default" href={absolute(ctx.alternates[BASE_LANGUAGE])} />
+			)
+		}
+
+		<meta property="og:type" content={type} />
+		<meta property="og:site_name" content={siteName} />
+		<meta property="og:title" content={pageTitle ?? siteName} />
+		{description && <meta property="og:description" content={description} />}
+		{image && <meta property="og:image" content={urlFor(image).width(1200).height(630).fit('crop').url()} />}
+		<meta property="og:locale" content={ctx.lang} />
+		<meta name="twitter:card" content="summary_large_image" />
+	</head>
+	<body>
+		<a
+			href="#content"
+			class="sr-only z-50 rounded-full bg-white px-4 py-2 text-sm focus:not-sr-only focus:fixed focus:top-4 focus:left-4"
+		>
+			{settings?.strings?.skipToContent ?? 'Skip to content'}
+		</a>
+		<slot />
+		<Footer ctx={ctx} />
+
+		<script>
+			// Close dropdowns (language switcher, mobile menu) when clicking elsewhere or pressing Escape
+			const closeDropdowns = (except?: Element | null) =>
+				document.querySelectorAll<HTMLDetailsElement>('details[data-dropdown][open]').forEach((el) => {
+					if (el !== except) el.open = false;
+				});
+			document.addEventListener('click', (event) =>
+				closeDropdowns((event.target as Element).closest('details[data-dropdown]')),
+			);
+			document.addEventListener('keydown', (event) => event.key === 'Escape' && closeDropdowns());
+		</script>
+	</body>
+</html>

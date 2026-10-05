@@ -1,0 +1,60 @@
+---
+import type { SiteContext } from '../../lib/data';
+import { hasImage, urlFor } from '../../lib/sanity';
+import type { Section } from '../../lib/types';
+import SiteNav from '../ui/SiteNav.astro';
+
+// Blue header card for every page except the home page
+interface Props {
+	section: Pick<Section, 'anchorId'> & {
+		eyebrow?: string;
+		heading?: string;
+		text?: string;
+		backgroundImage?: Section['backgroundImage'];
+	};
+	ctx: SiteContext;
+}
+const { section, ctx } = Astro.props;
+const { eyebrow, heading, text, backgroundImage } = section;
+---
+
+<header id={section.anchorId ?? 'top'} class="p-6">
+	<div class="@container">
+		<div
+			class="relative flex min-h-[480px] flex-col items-center justify-center overflow-clip rounded-xl bg-brand px-6 pt-32 pb-24 text-center text-white [--u:calc(100cqw/1392)] lg:min-h-[560px]"
+		>
+			{
+				hasImage(backgroundImage) ? (
+					<>
+						<img
+							src={urlFor(backgroundImage).width(2400).url()}
+							alt=""
+							aria-hidden="true"
+							fetchpriority="high"
+							class="absolute inset-0 size-full object-cover"
+						/>
+						<div class="absolute inset-0 bg-linear-to-b from-brand/60 to-brand/20" aria-hidden="true" />
+					</>
+				) : (
+					<img
+						src="/figma/formwise-type.svg"
+						alt=""
+						aria-hidden="true"
+						width="1344"
+						height="259.881"
+						class="absolute bottom-[calc(-80*var(--u))] left-1/2 h-auto w-[calc(1344*var(--u))] max-w-none -translate-x-1/2 opacity-10"
+					/>
+				)
+			}
+
+			<SiteNav ctx={ctx} />
+
+			<div class="relative flex max-w-[640px] flex-col items-center gap-6">
+				{eyebrow && <p class="type-body font-normal text-mist">{eyebrow}</p>}
+				<h1 class="type-h1 text-[36px] sm:text-[48px]">{heading}</h1>
+				{text && <p class="type-body max-w-[480px] text-white/80">{text}</p>}
+				<slot />
+			</div>
+		</div>
+	</div>
+</header>

@@ -1,0 +1,24 @@
+---
+import { PortableText } from 'astro-portabletext';
+import type { SiteContext } from '../../lib/data';
+import { withResolvedLinks } from '../../lib/richText';
+import type { RichText as RichTextValue } from '../../lib/types';
+import ImageBlock from './ImageBlock.astro';
+import LinkMark from './LinkMark.astro';
+
+interface Props {
+	value?: RichTextValue;
+	ctx: SiteContext;
+	class?: string;
+}
+const { value, ctx, class: className } = Astro.props;
+const blocks = withResolvedLinks(value, { lang: ctx.lang, settings: ctx.layout.settings });
+---
+
+{
+	blocks.length > 0 && (
+		<div class:list={['prose', className]}>
+			<PortableText value={blocks} components={{ type: { image: ImageBlock }, mark: { link: LinkMark } }} />
+		</div>
+	)
+}

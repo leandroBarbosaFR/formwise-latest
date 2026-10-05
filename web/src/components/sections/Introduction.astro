@@ -1,0 +1,32 @@
+---
+import type { Section } from '../../lib/types';
+import DashboardPreview from './DashboardPreview.astro';
+
+interface Props {
+	section: Section;
+}
+const { section } = Astro.props;
+const { eyebrow, heading, text, secondaryHeading, secondaryText, showProductPreview } = section;
+---
+
+<section id={section.anchorId} class="mx-auto max-w-[1440px] px-6 pt-20 pb-20 lg:pt-[120px] lg:pb-[120px]">
+	<div class="flex flex-col gap-6 lg:min-h-[312px] lg:flex-row lg:justify-between">
+		<p class="type-body font-normal">{eyebrow}</p>
+		<div class="flex max-w-[561px] flex-col gap-6 lg:mr-[126px]">
+			<h2 class="type-h2">{heading}</h2>
+			{text && <p class="type-body max-w-[395px]">{text}</p>}
+		</div>
+	</div>
+
+	{
+		(secondaryHeading || showProductPreview) && (
+			<div class="mt-16 flex flex-col gap-10 lg:mt-0 xl:flex-row xl:items-start xl:justify-between">
+				<div class="flex max-w-[416px] flex-col gap-6">
+					{secondaryHeading && <h3 class="type-h3">{secondaryHeading}</h3>}
+					{secondaryText && <p class="type-body max-w-[395px]">{secondaryText}</p>}
+				</div>
+				{showProductPreview && <DashboardPreview />}
+			</div>
+		)
+	}
+</section>

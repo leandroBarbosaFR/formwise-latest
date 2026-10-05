@@ -1,0 +1,56 @@
+---
+import type { SiteContext } from '../../lib/data';
+import { hasImage, urlFor } from '../../lib/sanity';
+import type { Section } from '../../lib/types';
+import ButtonLink from '../ui/ButtonLink.astro';
+
+interface Props {
+	section: Section;
+	ctx: SiteContext;
+}
+const { section, ctx } = Astro.props;
+const avatars = (section.avatars ?? []).filter(hasImage);
+---
+
+<section
+	id={section.anchorId}
+	class="mx-auto flex max-w-[1440px] flex-col items-center gap-8 px-6 py-32 text-center lg:py-[200px]"
+>
+	{
+		(avatars.length > 0 || section.socialProof) && (
+			<div class="flex items-center gap-3">
+				<div class="flex -space-x-2">
+					{avatars.map((avatar) => (
+						<img
+							src={urlFor(avatar).width(64).height(64).fit('crop').url()}
+							alt=""
+							width="32"
+							height="32"
+							loading="lazy"
+							class="size-8 rounded-full object-cover ring-2 ring-white"
+						/>
+					))}
+				</div>
+				{section.socialProof && <p class="type-small text-slate">{section.socialProof}</p>}
+			</div>
+		)
+	}
+
+	{section.heading && <h2 class="type-h2 max-w-[561px]">{section.heading}</h2>}
+	{section.text && <p class="type-body max-w-[395px]">{section.text}</p>}
+
+	<div class="flex flex-wrap items-center justify-center gap-2">
+		<ButtonLink
+			button={section.primaryCta}
+			ctx={ctx}
+			class="flex h-10 items-center justify-center rounded-full bg-brand px-[18px] text-sm leading-normal text-white transition hover:bg-brand/90"
+		/>
+		<ButtonLink
+			button={section.secondaryCta}
+			ctx={ctx}
+			class="flex h-10 items-center justify-center rounded-full border border-black bg-white px-[18px] text-sm leading-normal text-black transition hover:bg-black hover:text-white"
+		/>
+	</div>
+
+	{section.footnote && <p class="type-small text-slate">{section.footnote}</p>}
+</section>

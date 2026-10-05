@@ -1,0 +1,222 @@
+---
+import type { SiteContext } from '../../lib/data';
+import { homePath, linkAttributes, resolveHref } from '../../lib/links';
+import ButtonLink from './ButtonLink.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+
+interface Props {
+	ctx: SiteContext;
+	// The home hero shows the giant wordmark instead of the logo
+	showLogo?: boolean;
+}
+const { ctx, showLogo = true } = Astro.props;
+const { header, settings } = ctx.layout;
+const linkContext = { lang: ctx.lang, settings };
+const navigation = header?.navigation ?? [];
+const strings = settings?.strings ?? {};
+const pill = 'glass rounded-full text-sm leading-[1.2] tracking-[-0.02em] text-white [text-box:trim-both_cap_alphabetic]';
+const iconButton = 'glass flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-white transition hover:bg-white/10';
+---
+
+<nav class="absolute inset-x-6 top-6 z-20 flex items-center justify-between gap-2">
+	<div>
+		{
+			showLogo && (
+				<a href={homePath(ctx.lang)} class="flex h-10 items-center rounded-full px-4">
+					<img
+						src="/figma/dash-logo.svg"
+						alt={settings?.siteName ?? 'Formwise'}
+						width="109"
+						height="10"
+						class="h-3.5 w-auto brightness-0 invert"
+					/>
+				</a>
+			)
+		}
+	</div>
+
+	<div class="flex items-center gap-2">
+		{/* Takes the place of the dark mode button from the design, which is hidden for now */}
+		{
+			navigation.length > 0 && (
+				<button type="button" data-menu-open aria-haspopup="dialog" aria-label={strings.menu ?? 'Menu'} class={iconButton}>
+					<svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" aria-hidden="true">
+						<path d="M40 80h176M40 128h176M40 176h176" />
+					</svg>
+				</button>
+			)
+		}
+		<LanguageSwitcher ctx={ctx} compact />
+		<ButtonLink button={header?.loginButton} ctx={ctx} class:list={[pill, 'hidden px-6 py-[15px] sm:block']} />
+	</div>
+</nav>
+
+{
+	navigation.length > 0 && (
+		<dialog
+			data-menu
+			aria-label={strings.menu ?? 'Menu'}
+			class="site-menu m-0 ml-auto h-dvh max-h-none w-full max-w-[600px] bg-transparent p-3 backdrop:bg-black/20 backdrop:backdrop-blur-md sm:p-6"
+		>
+			<div data-menu-panel class="relative flex h-full flex-col overflow-y-auto rounded-xl bg-brand/75 text-white ring-1 ring-white/10 backdrop-blur-2xl">
+				<div data-menu-item class="flex items-center justify-end p-6">
+					<button type="button" data-menu-close aria-label={strings.close ?? 'Close'} class={iconButton}>
+						<svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" aria-hidden="true">
+							<path d="M200 56 56 200M200 200 56 56" />
+						</svg>
+					</button>
+				</div>
+
+				<ul class="flex flex-col px-6 pt-4 sm:px-12">
+					{navigation.map((item) => {
+						const href = resolveHref(item.link, linkContext);
+						const current = href?.split('#')[0] === Astro.url.pathname && !href?.includes('#');
+						return (
+							<li data-menu-item class="border-b border-white/15">
+								<a
+									href={href}
+									data-menu-link
+									aria-current={current ? 'page' : undefined}
+									class:list={[
+										'group flex items-center justify-between gap-6 py-5 text-[40px] leading-[1.1] tracking-[-0.03em] transition sm:text-[56px]',
+										current ? 'text-white' : 'text-white/45 hover:text-white',
+									]}
+									{...linkAttributes(item.link)}
+								>
+									{item.label}
+									<svg
+										width="28"
+										height="28"
+										viewBox="0 0 256 256"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="12"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										aria-hidden="true"
+										class="shrink-0 transition group-hover:translate-x-1"
+									>
+										{current ? <path d="M64 64l128 128M80 192h112V80" /> : <path d="M40 128h176M144 56l72 72-72 72" />}
+									</svg>
+								</a>
+							</li>
+						);
+					})}
+				</ul>
+
+				<div data-menu-item class="mt-auto flex flex-col gap-8 px-6 pt-16 pb-10 sm:px-12">
+					{
+						settings?.socialLinks?.length ? (
+							<ul class="flex flex-col gap-3">
+								{settings.socialLinks.map((social) => (
+									<li>
+										<a href={social.url} target="_blank" rel="noopener noreferrer" class="text-lg leading-[1.2] text-white transition hover:text-white/60">
+											{social.platform}
+										</a>
+									</li>
+								))}
+							</ul>
+						) : null
+					}
+					<div class="flex flex-wrap items-center gap-2">
+						<ButtonLink
+							button={header?.ctaButton}
+							ctx={ctx}
+							class="rounded-full bg-white px-6 py-[17px] text-sm leading-[1.2] tracking-[-0.02em] text-brand transition [text-box:trim-both_cap_alphabetic] hover:bg-brand-soft"
+						/>
+						<ButtonLink button={header?.loginButton} ctx={ctx} class:list={[pill, 'px-6 py-[17px]']} />
+					</div>
+				</div>
+			</div>
+		</dialog>
+	)
+}
+
+<style>
+	/* The blurred backdrop fades with the panel; the panel itself is animated in the script */
+	.site-menu::backdrop {
+		transition: opacity 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+	}
+	@starting-style {
+		.site-menu[open]::backdrop {
+			opacity: 0;
+		}
+	}
+	.site-menu.is-closing::backdrop {
+		opacity: 0;
+	}
+</style>
+
+<script>
+	const EASE = 'cubic-bezier(0.76, 0, 0.24, 1)';
+	const OPEN_MS = 700;
+	const CLOSE_MS = 550;
+	const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	document.querySelectorAll<HTMLButtonElement>('[data-menu-open]').forEach((button) => {
+		const menu = button.closest('nav')?.nextElementSibling;
+		if (!(menu instanceof HTMLDialogElement)) return;
+		const panel = menu.querySelector<HTMLElement>('[data-menu-panel]')!;
+		const items = [...menu.querySelectorAll<HTMLElement>('[data-menu-item]')];
+		let closing = false;
+
+		// The panel clipped down to the burger button, so it opens out of the icon
+		const iconClip = () => {
+			const b = button.getBoundingClientRect();
+			const p = panel.getBoundingClientRect();
+			return `inset(${b.top - p.top}px ${p.right - b.right}px ${p.bottom - b.bottom}px ${b.left - p.left}px round ${b.height / 2}px)`;
+		};
+		const fullClip = 'inset(0px 0px 0px 0px round 12px)';
+
+		function open() {
+			menu.showModal();
+			if (reduceMotion()) return;
+			panel.animate([{ clipPath: iconClip() }, { clipPath: fullClip }], { duration: OPEN_MS, easing: EASE });
+			// Contents follow once the panel has mostly unfolded, one after another
+			items.forEach((item, i) =>
+				item.animate(
+					[
+						{ opacity: 0, transform: 'translateY(16px)' },
+						{ opacity: 1, transform: 'none' },
+					],
+					{ duration: 500, delay: OPEN_MS * 0.45 + i * 60, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'backwards' },
+				),
+			);
+		}
+
+		async function close() {
+			if (!menu.open || closing) return;
+			if (reduceMotion()) return menu.close();
+			closing = true;
+			menu.classList.add('is-closing');
+			items.forEach((item) =>
+				item.animate([{ opacity: 1 }, { opacity: 0 }], { duration: CLOSE_MS * 0.4, easing: 'ease-out', fill: 'forwards' }),
+			);
+			await panel.animate([{ clipPath: fullClip }, { clipPath: iconClip() }], {
+				duration: CLOSE_MS,
+				easing: EASE,
+				fill: 'forwards',
+			}).finished;
+			menu.close();
+			menu.classList.remove('is-closing');
+			panel.getAnimations().forEach((animation) => animation.cancel());
+			items.forEach((item) => item.getAnimations().forEach((animation) => animation.cancel()));
+			closing = false;
+		}
+
+		button.addEventListener('click', open);
+		menu.querySelector('[data-menu-close]')?.addEventListener('click', close);
+		// Links to a section on the same page should reveal it, not leave the menu on top
+		menu.querySelectorAll('[data-menu-link]').forEach((link) => link.addEventListener('click', close));
+		// Clicking the blurred backdrop closes the menu
+		menu.addEventListener('click', (event) => {
+			if (event.target === menu) close();
+		});
+		// Escape: animate out instead of disappearing instantly
+		menu.addEventListener('cancel', (event) => {
+			event.preventDefault();
+			close();
+		});
+		menu.addEventListener('close', () => button.focus());
+	});
+</script>

@@ -1,0 +1,69 @@
+---
+import type { SiteContext } from '../../lib/data';
+import { hasImage, urlFor } from '../../lib/sanity';
+import type { Section } from '../../lib/types';
+import ButtonLink from '../ui/ButtonLink.astro';
+import SiteNav from '../ui/SiteNav.astro';
+
+interface Props {
+	section: Section;
+	ctx: SiteContext;
+}
+const { section, ctx } = Astro.props;
+const { heading, text, cta, backgroundImage, foregroundImage } = section;
+---
+
+<header id={section.anchorId ?? 'top'} class="p-6">
+	<div class="@container">
+		<!-- --u is one design pixel of the 1392px-wide artboard, so the artwork scales as one piece -->
+		<div
+			class="relative h-[max(620px,calc(852*var(--u)))] overflow-clip rounded-xl bg-brand [--u:calc(100cqw/1392)]"
+		>
+			{
+				hasImage(backgroundImage) && (
+					<img
+						src={urlFor(backgroundImage).width(2400).url()}
+						alt=""
+						aria-hidden="true"
+						fetchpriority="high"
+						class="absolute bottom-[calc(-239*var(--u))] left-[calc(50%+38*var(--u))] h-[calc(1152*var(--u))] w-[calc(1468*var(--u))] max-w-none -translate-x-1/2 object-cover"
+					/>
+				)
+			}
+
+			<img
+				src="/figma/formwise-type.svg"
+				alt={ctx.layout.settings?.siteName ?? 'Formwise'}
+				width="1344"
+				height="259.881"
+				class="absolute bottom-[calc(317.67*var(--u))] left-1/2 h-auto w-[calc(1344*var(--u))] max-w-none -translate-x-1/2"
+			/>
+
+			{
+				hasImage(foregroundImage) && (
+					<img
+						src={urlFor(foregroundImage).width(2400).url()}
+						alt={foregroundImage.alt ?? ''}
+						class="absolute bottom-[calc(-239*var(--u))] left-[calc(50%+38*var(--u))] h-[calc(1152*var(--u))] w-[calc(1468*var(--u))] max-w-none -translate-x-1/2"
+					/>
+				)
+			}
+
+			<SiteNav ctx={ctx} showLogo={false} />
+
+			<div
+				class="absolute top-24 left-1/2 flex w-full max-w-[593px] -translate-x-1/2 flex-col items-center gap-6 px-6 text-center text-white sm:top-20"
+			>
+				<div class="flex flex-col items-center gap-2">
+					<h1 class="type-h3 max-w-[387px]">{heading}</h1>
+					{text && <p class="type-body max-w-[409px]">{text}</p>}
+				</div>
+				<ButtonLink
+					button={cta}
+					ctx={ctx}
+					class="glass rounded-full px-6 py-[17px] text-sm leading-[1.2] tracking-[-0.02em] text-white [text-box:trim-both_cap_alphabetic]"
+				/>
+			</div>
+		</div>
+	</div>
+</header>

@@ -1,0 +1,55 @@
+---
+import { hasImage, urlFor } from '../../lib/sanity';
+import type { Section } from '../../lib/types';
+
+interface Props {
+	section: Section;
+}
+const { section } = Astro.props;
+const { primaryImage, secondaryImage, title, text } = section;
+
+// Respect the hotspot editors set in Sanity when the image is cropped by object-cover
+const focus = (image: any) =>
+	image?.hotspot ? `${image.hotspot.x * 100}% ${image.hotspot.y * 100}%` : 'center';
+---
+
+<section id={section.anchorId} class="mx-auto max-w-[1440px] px-6 py-20 lg:px-8 lg:py-[120px]">
+	<div class="flex flex-col gap-4 lg:grid lg:h-[900px] lg:grid-cols-[564px_796px] lg:items-start lg:justify-between">
+		<div class="flex flex-col gap-4">
+			<div class="relative aspect-[564/556] overflow-clip bg-[#b1b1b1]">
+				{
+					hasImage(primaryImage) && (
+						<img
+							src={urlFor(primaryImage).width(1200).height(1183).fit('crop').url()}
+							alt={primaryImage.alt ?? ''}
+							loading="lazy"
+							class="absolute inset-0 size-full object-cover"
+							style={`object-position:${focus(primaryImage)}`}
+						/>
+					)
+				}
+			</div>
+			{
+				(title || text) && (
+					<div class="flex max-w-[451px] flex-col gap-2">
+						{title && <h3 class="type-h4">{title}</h3>}
+						{text && <p class="type-body max-w-[395px]">{text}</p>}
+					</div>
+				)
+			}
+		</div>
+		<div class="relative aspect-[796/900] overflow-clip bg-[#b1b1b1] lg:aspect-auto lg:h-[900px]">
+			{
+				hasImage(secondaryImage) && (
+					<img
+						src={urlFor(secondaryImage).width(1600).height(1809).fit('crop').url()}
+						alt={secondaryImage.alt ?? ''}
+						loading="lazy"
+						class="absolute inset-0 size-full object-cover"
+						style={`object-position:${focus(secondaryImage)}`}
+					/>
+				)
+			}
+		</div>
+	</div>
+</section>

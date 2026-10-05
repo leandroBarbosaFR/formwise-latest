@@ -1,0 +1,21 @@
+---
+import type { SiteContext } from '../../lib/data';
+import { linkAttributes, resolveHref } from '../../lib/links';
+import type { Button } from '../../lib/types';
+
+interface Props {
+	button?: Button | null;
+	ctx: SiteContext;
+	class?: string;
+}
+const { button, ctx, class: className } = Astro.props;
+const href = resolveHref(button?.link, { lang: ctx.lang, settings: ctx.layout.settings });
+---
+
+{
+	button?.label && (
+		<a href={href ?? '#'} class={className} {...linkAttributes(button.link)}>
+			{button.label}
+		</a>
+	)
+}

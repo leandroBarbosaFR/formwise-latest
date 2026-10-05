@@ -1,0 +1,97 @@
+---
+import { sanityClient } from 'sanity:client';
+import RichText from '../../../components/rich-text/RichText.astro';
+import PageHeader from '../../../components/sections/PageHeader.astro';
+import PostCard from '../../../components/sections/PostCard.astro';
+import Layout from '../../../layouts/main.astro';
+import { getLanguages, getSiteContext } from '../../../lib/data';
+import { alternatesFor, blogPath, fillTemplate } from '../../../lib/links';
+import { POST_PATHS_QUERY, POST_QUERY } from '../../../lib/queries';
+import { minutesToRead } from '../../../lib/richText';
+import { hasImage, imageDimensions, urlFor } from '../../../lib/sanity';
+import type { Post } from '../../../lib/types';
+
+export async function getStaticPaths() {
+	const languages = await getLanguages();
+	const posts = await sanityClient.fetch<{ language: string; slug: string }[]>(POST_PATHS_QUERY, { languages });
+	return posts.map((post) => ({ params: { lang: post.language, slug: post.slug } }));
+}
+
+const { lang, slug } = Astro.params;
+const post = await sanityClient.fetch<Post>(POST_QUERY, { lang, slug });
+const ctx = await getSiteContext(lang, alternatesFor(post.translations, await getLanguages(), 'post'));
+const strings = ctx.layout.settings?.strings ?? {};
+
+const date = new Intl.DateTimeFormat(lang, { dateStyle: 'long' }).format(new Date(post.publishedAt));
+const category = post.categories?.find(Boolean);
+const cover = hasImage(post.coverImage) ? post.coverImage : undefined;
+const coverSize = imageDimensions(cover);
+const related = (post.related ?? []).filter(Boolean);
+---
+
+<Layout ctx={ctx} title={post.title} seo={{ description: post.excerpt, image: cover, ...post.seo }} type="article">
+	<PageHeader section={{ eyebrow: category?.title, heading: post.title, text: post.excerpt }} ctx={ctx}>
+		<p class="type-small text-white/70">
+			<time datetime={post.publishedAt}>{date}</time>
+			<span aria-hidden="true"> · </span>
+			{fillTemplate(strings.minutesRead ?? '{minutes} min read', { minutes: minutesToRead(post.readingTime) })}
+		</p>
+	</PageHeader>
+
+	<main id="content">
+		<article class="mx-auto max-w-[960px] px-6 py-16 lg:py-24">
+			{
+				cover && (
+					<img
+						src={urlFor(cover).width(1920).url()}
+						alt={cover.alt ?? ''}
+						width={coverSize?.width}
+						height={coverSize?.height}
+						class="mb-16 w-full rounded-2xl"
+					/>
+				)
+			}
+
+			<div class="mx-auto max-w-[680px]">
+				<RichText value={post.body} ctx={ctx} />
+
+				{
+					post.author && (
+						<div class="mt-16 flex items-center gap-4 border-t border-black/10 pt-8">
+							{hasImage(post.author.image) && (
+								<img
+									src={urlFor(post.author.image).width(96).height(96).fit('crop').url()}
+									alt=""
+									width="48"
+									height="48"
+									class="size-12 rounded-full object-cover"
+								/>
+							)}
+							<div class="flex flex-col gap-1">
+								<p class="text-lg leading-[1.2] tracking-[-0.02em]">{post.author.name}</p>
+								{post.author.role && <p class="type-small text-slate">{post.author.role}</p>}
+							</div>
+						</div>
+					)
+				}
+
+				<a href={blogPath(lang)} class="type-body mt-10 inline-flex items-center gap-2 font-normal text-brand hover:text-ink">
+					← {strings.backToBlog ?? 'Back to blog'}
+				</a>
+			</div>
+		</article>
+
+		{
+			related.length > 0 && (
+				<section class="mx-auto flex max-w-[1440px] flex-col gap-10 px-6 pb-20 lg:pb-[120px]">
+					<h2 class="type-h2">{strings.relatedPosts ?? 'Keep reading'}</h2>
+					<div class="grid grid-cols-1 gap-x-5 gap-y-14 md:grid-cols-2 lg:grid-cols-3">
+						{related.map((item) => (
+							<PostCard post={item} ctx={ctx} />
+						))}
+					</div>
+				</section>
+			)
+		}
+	</main>
+</Layout>

@@ -1,0 +1,54 @@
+---
+import type { SiteContext } from '../../lib/data';
+import type { Section } from '../../lib/types';
+import Contact from './Contact.astro';
+import Cta from './Cta.astro';
+import Faq from './Faq.astro';
+import Features from './Features.astro';
+import Hero from './Hero.astro';
+import Highlights from './Highlights.astro';
+import ImageText from './ImageText.astro';
+import Introduction from './Introduction.astro';
+import PageHeader from './PageHeader.astro';
+import PostList from './PostList.astro';
+import Pricing from './Pricing.astro';
+import RichTextSection from './RichTextSection.astro';
+import Showcase from './Showcase.astro';
+import Stats from './Stats.astro';
+import Team from './Team.astro';
+import Testimonials from './Testimonials.astro';
+import WordWheel from './WordWheel.astro';
+
+interface Props {
+	sections: Section[];
+	ctx: SiteContext;
+}
+const { sections, ctx } = Astro.props;
+
+const components: Record<string, any> = {
+	heroSection: Hero,
+	pageHeaderSection: PageHeader,
+	introSection: Introduction,
+	wordWheelSection: WordWheel,
+	highlightsSection: Highlights,
+	featureCardsSection: Features,
+	showcaseSection: Showcase,
+	testimonialsSection: Testimonials,
+	pricingSection: Pricing,
+	faqSection: Faq,
+	ctaSection: Cta,
+	richTextSection: RichTextSection,
+	imageTextSection: ImageText,
+	statsSection: Stats,
+	teamSection: Team,
+	contactSection: Contact,
+	postListSection: PostList,
+};
+---
+
+{
+	sections.map((section) => {
+		const Component = components[section._type];
+		return Component ? <Component section={section} ctx={ctx} /> : null;
+	})
+}

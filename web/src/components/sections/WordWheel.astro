@@ -1,0 +1,106 @@
+---
+import type { Section } from '../../lib/types';
+
+interface Props {
+	section: Section;
+}
+const { section } = Astro.props;
+const words: string[] = section.words ?? [];
+---
+
+<!--
+	Without JS (or with reduced motion) this renders a static list.
+	The script adds `data-scrolly`: the section becomes a tall scroll track with a
+	pinned panel, and the words turn like a looping wheel through the centre slot.
+-->
+<section id={section.anchorId} class="group bg-brand" data-word-wheel>
+	<div data-track>
+		<div
+			class="mx-auto flex min-h-[900px] max-w-[561px] flex-col items-center justify-center gap-16 px-6 py-24 text-center group-data-scrolly:sticky group-data-scrolly:top-0 group-data-scrolly:h-svh group-data-scrolly:min-h-0 group-data-scrolly:py-0"
+		>
+			{section.eyebrow && <p class="type-body font-normal text-mist">{section.eyebrow}</p>}
+			<div
+				class="relative w-full group-data-scrolly:overflow-hidden group-data-scrolly:[mask-image:linear-gradient(transparent,#000_18%,#000_82%,transparent)]"
+			>
+				<ul class="relative flex flex-col gap-14 text-[36px] leading-[1.2] tracking-[-0.02em] text-white sm:text-[48px]">
+					{words.map((word) => <li data-item class="will-change-transform">{word}</li>)}
+				</ul>
+			</div>
+			{section.footnote && <p class="type-body font-normal text-mist">{section.footnote}</p>}
+		</div>
+	</div>
+</section>
+
+<script>
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	// Scroll distance spent on each word, in viewport heights
+	const STEP_SVH = 40;
+	// Opacity of the words next to the centre slot and beyond
+	const DIM = 0.25;
+
+	// Smoothstep: each word settles in the centre before the next one moves in
+	const ease = (t: number) => t * t * (3 - 2 * t);
+
+	function setup(section: HTMLElement) {
+		const track = section.querySelector<HTMLElement>('[data-track]')!;
+		const items = [...section.querySelectorAll<HTMLElement>('[data-item]')];
+		const count = items.length;
+		if (count < 2) return;
+		// Index of the slot in the middle of the window
+		const middle = (count - 1) / 2;
+		// Wrap a slot offset into [-count/2, count/2) so the list loops around
+		const wrap = (offset: number) => ((((offset + count / 2) % count) + count) % count) - count / 2;
+
+		section.dataset.scrolly = '';
+		// One full turn of the wheel, so the section ends on the word it started with
+		track.style.height = `calc(100svh + ${count * STEP_SVH}svh)`;
+
+		let pitch = 0;
+		const measure = () => {
+			pitch = items[1].offsetTop - items[0].offsetTop;
+		};
+
+		const update = () => {
+			const scrollable = track.offsetHeight - window.innerHeight;
+			const progress = Math.min(Math.max(-track.getBoundingClientRect().top / scrollable, 0), 1);
+			const position = progress * count;
+			const step = Math.floor(position);
+			const active = step + ease(position - step);
+
+			items.forEach((item, i) => {
+				// Where this word should sit relative to the centre slot
+				const offset = wrap(i - active);
+				const distance = Math.abs(offset);
+				item.style.transform = `translate3d(0, ${(offset - (i - middle)) * pitch}px, 0)`;
+				// Words crossing the wrap point (past the outer slots) fade out completely
+				const opacity =
+					distance <= middle
+						? Math.max(DIM, 1 - distance * (1 - DIM))
+						: DIM * Math.max(0, 1 - (distance - middle) * 2);
+				item.style.opacity = String(opacity);
+			});
+		};
+
+		let frame = 0;
+		const schedule = () => {
+			cancelAnimationFrame(frame);
+			frame = requestAnimationFrame(update);
+		};
+
+		measure();
+		update();
+		window.addEventListener('scroll', schedule, { passive: true });
+		window.addEventListener('resize', () => {
+			measure();
+			schedule();
+		});
+		// Word heights change once the brand font swaps in
+		document.fonts.ready.then(() => {
+			measure();
+			update();
+		});
+	}
+
+	if (!reduceMotion) document.querySelectorAll<HTMLElement>('[data-word-wheel]').forEach(setup);
+</script>

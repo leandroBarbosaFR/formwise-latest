@@ -1,0 +1,31 @@
+---
+import { sanityClient } from 'sanity:client';
+import PageView from '../../components/PageView.astro';
+import { getLanguages, getLayout, getSiteContext } from '../../lib/data';
+import { alternatesFor } from '../../lib/links';
+import { PAGE_BY_SLUG_QUERY, PAGE_PATHS_QUERY } from '../../lib/queries';
+import type { Page } from '../../lib/types';
+
+export async function getStaticPaths() {
+	const languages = await getLanguages();
+	const pages = await sanityClient.fetch<{ _id: string; language: string; slug: string }[]>(PAGE_PATHS_QUERY, {
+		languages,
+	});
+	// The home and blog pages have their own routes
+	const reserved = new Set<string>();
+	for (const lang of languages) {
+		const { settings } = await getLayout(lang);
+		if (settings?.homePageId) reserved.add(settings.homePageId);
+		if (settings?.blogPageId) reserved.add(settings.blogPageId);
+	}
+	return pages
+		.filter((page) => !reserved.has(page._id) && page.slug !== 'blog')
+		.map((page) => ({ params: { lang: page.language, slug: page.slug } }));
+}
+
+const { lang, slug } = Astro.params;
+const page = await sanityClient.fetch<Page>(PAGE_BY_SLUG_QUERY, { lang, slug });
+const ctx = await getSiteContext(lang, alternatesFor(page.translations, await getLanguages(), 'page'));
+---
+
+<PageView page={page} ctx={ctx} />

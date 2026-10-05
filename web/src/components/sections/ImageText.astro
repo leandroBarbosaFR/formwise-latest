@@ -1,0 +1,35 @@
+---
+import type { SiteContext } from '../../lib/data';
+import { hasImage, urlFor } from '../../lib/sanity';
+import type { Section } from '../../lib/types';
+import RichText from '../rich-text/RichText.astro';
+
+interface Props {
+	section: Section;
+	ctx: SiteContext;
+}
+const { section, ctx } = Astro.props;
+const imageFirst = section.imagePosition === 'start';
+---
+
+<section id={section.anchorId} class="mx-auto max-w-[1440px] px-6 py-20 lg:py-[120px]">
+	<div class="grid items-center gap-10 lg:grid-cols-2 lg:gap-20">
+		<div class:list={['flex flex-col gap-6', imageFirst && 'lg:order-2']}>
+			{section.eyebrow && <p class="type-body font-normal text-slate">{section.eyebrow}</p>}
+			{section.heading && <h2 class="type-h2 max-w-[561px]">{section.heading}</h2>}
+			<RichText value={section.body} ctx={ctx} class="max-w-[520px]" />
+		</div>
+		{
+			hasImage(section.image) && (
+				<div class="relative aspect-[4/3] overflow-clip rounded-2xl bg-brand-soft">
+					<img
+						src={urlFor(section.image).width(1400).height(1050).fit('crop').url()}
+						alt={section.image.alt ?? ''}
+						loading="lazy"
+						class="absolute inset-0 size-full object-cover"
+					/>
+				</div>
+			)
+		}
+	</div>
+</section>

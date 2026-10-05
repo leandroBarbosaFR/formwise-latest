@@ -1,0 +1,44 @@
+---
+import { hasImage, urlFor } from '../../lib/sanity';
+import { inlineSvg } from '../../lib/svg';
+import type { Section } from '../../lib/types';
+
+interface Props {
+	section: Section;
+}
+const { section } = Astro.props;
+const items: { _key: string; icon?: any; title: string; text?: string }[] = section.items ?? [];
+
+// SVG icons are inlined so they can be coloured brand blue; other images are shown as they are
+const icons = await Promise.all(
+	items.map(async ({ icon }) => {
+		// The default icon is already brand blue
+		if (!hasImage(icon)) return { url: '/figma/grid-four.svg' };
+		const url = urlFor(icon).url();
+		return icon.asset._ref.endsWith('-svg') ? { svg: await inlineSvg(url), url } : { url };
+	}),
+);
+---
+
+<section
+	id={section.anchorId}
+	class="mx-auto grid max-w-[1440px] grid-cols-1 gap-12 px-6 py-[72px] sm:grid-cols-2 lg:grid-cols-4 lg:gap-[68px] lg:px-16"
+>
+	{
+		items.map(({ title, text }, i) => (
+			<div class="flex flex-col items-center gap-8 text-center">
+				<div class="flex size-16 items-center justify-center rounded-full bg-brand-soft">
+					{icons[i].svg ? (
+						<span class="size-8 text-brand" set:html={icons[i].svg} />
+					) : (
+						icons[i].url && <img src={icons[i].url} alt="" width="32" height="32" class="size-8 object-contain" />
+					)}
+				</div>
+				<div class="flex flex-col gap-2">
+					<h3 class="type-h4">{title}</h3>
+					{text && <p class="type-body">{text}</p>}
+				</div>
+			</div>
+		))
+	}
+</section>

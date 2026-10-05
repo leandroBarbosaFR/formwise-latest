@@ -1,0 +1,22 @@
+---
+import PageHeader from '../components/sections/PageHeader.astro';
+import Layout from '../layouts/main.astro';
+import { getSiteContext } from '../lib/data';
+import { BASE_LANGUAGE } from '../lib/languages';
+import { homePath } from '../lib/links';
+
+const ctx = await getSiteContext(BASE_LANGUAGE, {});
+const strings = ctx.layout.settings?.strings ?? {};
+---
+
+<Layout ctx={ctx} title={strings.notFoundTitle} seo={{ noIndex: true }}>
+	<PageHeader section={{ eyebrow: '404', heading: strings.notFoundTitle, text: strings.notFoundText }} ctx={ctx}>
+		<a
+			href={homePath(BASE_LANGUAGE)}
+			class="glass rounded-full px-6 py-[17px] text-sm leading-[1.2] tracking-[-0.02em] text-white [text-box:trim-both_cap_alphabetic]"
+		>
+			{strings.backHome ?? 'Back to home'}
+		</a>
+	</PageHeader>
+	<main id="content"></main>
+</Layout>

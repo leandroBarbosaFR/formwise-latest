@@ -1,0 +1,16 @@
+---
+import type { SiteContext } from '../../lib/data';
+import type { Section } from '../../lib/types';
+import RichText from '../rich-text/RichText.astro';
+
+interface Props {
+	section: Section;
+	ctx: SiteContext;
+}
+const { section, ctx } = Astro.props;
+---
+
+<section id={section.anchorId} class="mx-auto max-w-[768px] px-6 py-20 lg:py-[120px]">
+	{section.heading && <h2 class="type-h2 mb-10">{section.heading}</h2>}
+	<RichText value={section.body} ctx={ctx} />
+</section>

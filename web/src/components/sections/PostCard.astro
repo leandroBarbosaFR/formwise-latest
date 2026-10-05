@@ -1,0 +1,43 @@
+---
+import type { SiteContext } from '../../lib/data';
+import { fillTemplate, postPath } from '../../lib/links';
+import { minutesToRead } from '../../lib/richText';
+import { hasImage, urlFor } from '../../lib/sanity';
+import type { PostCard } from '../../lib/types';
+
+interface Props {
+	post: PostCard;
+	ctx: SiteContext;
+}
+const { post, ctx } = Astro.props;
+const strings = ctx.layout.settings?.strings ?? {};
+const date = new Intl.DateTimeFormat(ctx.lang, { dateStyle: 'medium' }).format(new Date(post.publishedAt));
+const categories = (post.categories ?? []).filter(Boolean);
+---
+
+<article class="group relative flex flex-col gap-5" data-categories={categories.map((c) => c._id).join(' ')}>
+	<div class="relative aspect-[4/3] overflow-clip rounded-2xl bg-brand">
+		{
+			hasImage(post.coverImage) && (
+				<img
+					src={urlFor(post.coverImage).width(900).height(675).fit('crop').url()}
+					alt={post.coverImage.alt ?? ''}
+					loading="lazy"
+					class="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]"
+				/>
+			)
+		}
+	</div>
+	<div class="flex flex-col gap-3">
+		<div class="type-small flex flex-wrap items-center gap-2 text-slate">
+			{categories.slice(0, 1).map((c) => <span class="rounded bg-brand-soft px-2 py-1 font-demi text-brand">{c.title}</span>)}
+			<time datetime={post.publishedAt}>{date}</time>
+			<span aria-hidden="true">·</span>
+			<span>{fillTemplate(strings.minutesRead ?? '{minutes} min read', { minutes: minutesToRead(post.readingTime) })}</span>
+		</div>
+		<h3 class="type-h4">
+			<a href={postPath(ctx.lang, post.slug)} class="after:absolute after:inset-0">{post.title}</a>
+		</h3>
+		{post.excerpt && <p class="type-body max-w-[420px] text-ink/80">{post.excerpt}</p>}
+	</div>
+</article>

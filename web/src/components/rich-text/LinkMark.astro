@@ -1,0 +1,13 @@
+---
+import type { Mark } from 'astro-portabletext/types';
+
+interface Props {
+	node: Mark<{ href?: string; linkType?: string; openInNewTab?: boolean }>;
+}
+const { markDef } = Astro.props.node;
+const external = markDef.linkType === 'external' && markDef.openInNewTab;
+---
+
+<a href={markDef.href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>
+	<slot />
+</a>

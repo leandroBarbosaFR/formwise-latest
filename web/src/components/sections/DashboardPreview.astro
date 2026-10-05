@@ -1,0 +1,380 @@
+---
+// Miniature product dashboard from the Figma "Introduction" section.
+// Dimensions are kept 1:1 with the design (804×441 frame) and the whole
+// preview is scaled with `zoom` on narrow screens.
+const icon = (name: string) => `/figma/dash-${name}.svg`;
+
+const toolbar = ['question', 'bell-simple', 'sun-dim', 'globe'];
+
+const stats = [
+	{ label: 'Overview of your association', value: '17', icon: 'chart-bar' },
+	{ label: 'Events this month', value: '2', icon: 'calendar-check' },
+	{ label: 'Membership pending', value: '9', icon: 'warning-circle' },
+	{ label: 'Financial balance', value: '€9,567.10', icon: 'piggy-bank' },
+];
+
+const revenueBars = [
+	{ label: 'Uncateg.', value: '€10,020', h: 89.92, w: 24.013 },
+	{ label: 'Memb.', value: '€160', h: 66.929, w: 23.502 },
+	{ label: 'Ticketing', value: '€125', h: 62.331, w: 23.502 },
+	{ label: 'Sales', value: '€115', h: 41.895, w: 23.502 },
+	{ label: 'Donations', value: '€70', h: 33.209, w: 24.013 },
+];
+const revenueGridlines = [-43.99, -11.8, 22.93, 55.12];
+
+const axis = [
+	{ label: '100k', line: 'line-5' },
+	{ label: '50k', line: 'line-6' },
+	{ label: '20k', line: 'line-7', fixed: 134.369 },
+	{ label: '10k', line: 'line-8' },
+	{ label: '0', line: 'line-9' },
+];
+const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
+
+const menuGroups = [
+	{
+		title: 'Members',
+		caret: 'caret-down',
+		height: 67.44,
+		items: [
+			['users', 'Members'],
+			['identification-card', 'Memberships'],
+			['calendar-blank', 'Events'],
+		],
+	},
+	{
+		title: 'Communication',
+		caret: 'caret-down-1',
+		height: 112.4,
+		items: [
+			['chats-circle', 'Messages'],
+			['video-camera', 'Meetings'],
+			['list-checks', 'Surveys'],
+			['newspaper-clipping', 'News'],
+			['question-1', 'Support'],
+		],
+	},
+	{
+		title: 'Finance',
+		caret: 'caret-down',
+		height: 112.4,
+		items: [
+			['bank', 'Financial overview'],
+			['files', 'Quotes'],
+			['list-checks-1', 'Invoices'],
+			['package', 'Suppliers'],
+			['heart', 'Donations'],
+		],
+	},
+];
+const secondaryMenu = [
+	['scales', 'Legal Documents'],
+	['gear', 'Settings'],
+];
+
+const card = 'overflow-clip rounded-[4.087px] bg-white p-[12.262px]';
+const iconTile = 'relative size-[20.436px] shrink-0 overflow-clip rounded-[4.087px] bg-dash-tint';
+const axisText = 'text-center text-[6.131px] leading-[8.175px] whitespace-nowrap text-dash-axis [font-feature-settings:"ss01"_1,"cv01"_1]';
+const menuLabel = 'flex-1 text-[7.153px] leading-[1.1] font-medium text-dash-ink [text-box:trim-both_cap_alphabetic]';
+const indicator = 'h-[12.262px] w-[1.533px] shrink-0 rounded-r-[4.087px] bg-brand';
+---
+
+<div
+	class="relative h-[441px] w-[804px] shrink-0 overflow-clip rounded-2xl bg-brand [zoom:0.4] sm:[zoom:0.73] md:[zoom:0.89] lg:[zoom:1]"
+	aria-hidden="true"
+>
+	<img
+		src="/figma/dash-bg.png"
+		alt=""
+		class="absolute top-[-124px] left-[-546px] h-[1023px] w-[1534px] max-w-none object-cover blur-[102px]"
+	/>
+
+	<div
+		class="absolute bottom-[0.14px] left-1/2 h-[392.859px] w-[746px] -translate-x-1/2 overflow-clip rounded-t-[12.862px] bg-[linear-gradient(rgb(0_0_0/0.05),rgb(0_0_0/0.05)),linear-gradient(rgb(255_255_255/0.3),rgb(255_255_255/0.3))] backdrop-blur-[1.608px]"
+	>
+		<div
+			class="absolute top-[18.01px] left-1/2 h-[459.819px] w-[735.71px] -translate-x-1/2 overflow-clip rounded-[8.175px] bg-white text-dash-ink"
+		>
+			<!-- Main panel -->
+			<div class="absolute top-0 left-[143.05px] h-[459.819px] w-[592.656px] overflow-clip bg-[#f7f7f7]">
+				<div class="absolute top-[16.35px] right-[16.35px] flex items-center gap-[4.087px]">
+					{
+						toolbar.map((name) => (
+							<div class="flex size-[24.524px] items-center justify-center rounded-full border-[0.511px] border-[#dbdbdb] bg-[#f5f3f1] p-[6.642px]">
+								<img src={icon(name)} alt="" class="size-[10.218px]" />
+							</div>
+						))
+					}
+					<div
+						class="flex size-[24.524px] items-center justify-center rounded-full bg-brand p-[6.642px] text-[8.175px] leading-[1.1] font-medium text-white"
+					>
+						LM
+					</div>
+				</div>
+
+				<p class="absolute top-[38.32px] left-[16.35px] text-[20.436px] leading-[1.1] font-medium">Dashboard</p>
+				<p class="absolute top-[62.84px] left-[16.35px] text-[8.175px] leading-[1.1] font-light">
+					Overview of your association
+				</p>
+
+				<div
+					class="absolute top-[84.3px] left-[16.35px] flex h-[359.17px] w-[559.957px] flex-col gap-[8.175px] text-[8.175px] leading-[1.1] font-medium"
+				>
+					<!-- Stat cards -->
+					<div class="flex h-[85.833px] gap-[8.175px]">
+						{
+							stats.map((stat) => (
+								<div class:list={[card, 'flex flex-1 flex-col justify-between']}>
+									<div class="flex items-start justify-between">
+										<p class="w-[85.322px]">{stat.label}</p>
+										<div class={iconTile}>
+											<img src={icon(stat.icon)} alt="" class="absolute top-[5.11px] left-[5.11px] size-[10.218px]" />
+										</div>
+									</div>
+									<p class="text-[14.305px]">{stat.value}</p>
+								</div>
+							))
+						}
+					</div>
+
+					<!-- Charts -->
+					<div class="flex h-[159.404px] gap-[8.175px]">
+						<div class:list={[card, 'relative flex flex-1 flex-col gap-[12.262px]']}>
+							{
+								revenueGridlines.map((offset) => (
+									<div
+										class="absolute left-[12.26px] h-0 w-[274.87px] -translate-y-1/2"
+										style={`top:calc(50% + ${offset}px)`}
+									>
+										<img src={icon('line-4')} alt="" class="absolute inset-[-0.26px_0] block size-full max-w-none" />
+									</div>
+								))
+							}
+							<p class="relative">2026 Revenue by Category</p>
+							<div class="relative flex h-[111.378px] flex-col justify-end gap-[4.087px] pt-[9.196px]">
+								<div class="flex items-end gap-[7.664px] px-[4.087px]">
+									{
+										revenueBars.map((bar) => (
+											<div
+												class="relative shrink-0 overflow-clip rounded-[4.087px] bg-brand"
+												style={`height:${bar.h}px;width:${bar.w}px`}
+											>
+												<p class="absolute top-[6.13px] left-1/2 -translate-x-1/2 text-center text-[5.109px] leading-[1.1] font-normal whitespace-nowrap text-white">
+													{bar.value}
+												</p>
+											</div>
+										))
+									}
+								</div>
+								<div class="flex items-center">
+									{revenueBars.map((bar) => <p class:list={[axisText, 'flex-1 font-normal']}>{bar.label}</p>)}
+								</div>
+							</div>
+						</div>
+
+						<div class:list={[card, 'flex flex-1 flex-col justify-between']}>
+							<div class="flex h-[134.88px] flex-col justify-between">
+								<div class="flex flex-col gap-[4.087px]">
+									<p>Membership 2026</p>
+									<p class="text-[7.153px] text-dash-muted">24% Collected</p>
+								</div>
+								<div class="flex h-[84.3px] overflow-clip rounded-[4.087px] bg-brand">
+									<div class="h-full w-[112.4px] shrink-0 bg-brand"></div>
+									<div class="h-full flex-1 bg-dash-mid"></div>
+									<div class="h-full flex-1 bg-dash-tint"></div>
+								</div>
+								<div class="flex items-center justify-center gap-[16.349px] text-[6.131px] font-normal">
+									{
+										[
+											['bg-brand', 'Pending'],
+											['bg-dash-mid', 'Exemptions'],
+											['bg-dash-tint', 'Paid'],
+										].map(([swatch, label]) => (
+											<div class="flex items-center gap-[4.087px]">
+												<div class:list={['size-[3.065px] rounded-[1.022px]', swatch]} />
+												<p class="whitespace-nowrap">{label}</p>
+											</div>
+										))
+									}
+								</div>
+							</div>
+						</div>
+
+						<div class:list={[card, 'relative flex flex-1 flex-col gap-[8.175px]']}>
+							<p>Revenue vs. Expenses (Last 6 months)</p>
+							<div class="flex min-h-px flex-1 flex-col gap-[5.365px]">
+								<div class="relative flex min-h-px w-[182.906px] flex-1 items-center gap-[6.131px]">
+									<div class="flex h-full flex-1 flex-col items-end justify-end gap-[4.087px] pt-[9.196px]">
+										<div class="min-h-px w-full flex-1"></div>
+										<div class="flex w-[163.491px] items-center justify-end gap-[12.262px]">
+											{months.map((month) => <p class:list={[axisText, 'flex-1 font-normal']}>{month}</p>)}
+										</div>
+									</div>
+									<div class="absolute top-0 left-0 flex h-[86.855px] flex-col gap-[14.816px]">
+										{
+											axis.map((row) => (
+												<div class="flex min-h-px w-[155.317px] flex-1 items-center gap-[8.685px]">
+													<p class:list={[axisText, 'font-normal']}>{row.label}</p>
+													<div
+														class:list={['relative h-0', row.fixed ? 'shrink-0' : 'min-w-px flex-1']}
+														style={row.fixed ? `width:${row.fixed}px` : undefined}
+													>
+														<img src={icon(row.line)} alt="" class="absolute inset-[-0.26px_0] block size-full max-w-none" />
+													</div>
+												</div>
+											))
+										}
+									</div>
+								</div>
+								<div class="flex items-center justify-center gap-[16.349px] text-[6.131px] font-normal">
+									{
+										[
+											['bg-brand', 'Paid'],
+											['bg-dash-alert', 'Pending'],
+										].map(([swatch, label]) => (
+											<div class="flex items-center gap-[4.087px]">
+												<div class:list={['size-[3.065px] rounded-[1.022px]', swatch]} />
+												<p class="whitespace-nowrap">{label}</p>
+											</div>
+										))
+									}
+								</div>
+							</div>
+							<div class="absolute top-[32.19px] right-[9.71px] h-[81.746px] w-[138.457px]">
+								<img
+									src={icon('line-chart')}
+									alt=""
+									class="absolute inset-[-0.15%_-0.28%_-0.31%_0] block size-full max-w-none"
+								/>
+							</div>
+						</div>
+					</div>
+
+					<!-- Summary cards -->
+					<div class="flex h-[97.584px] items-center gap-[8.175px]">
+						<div class:list={[card, 'flex h-[97.073px] flex-1 flex-col justify-between']}>
+							<div class="flex items-center gap-[4.087px]">
+								<div class={iconTile}>
+									<img src={icon('chart-bar-1')} alt="" class="absolute top-[9.1px] left-[5.11px] size-[10.218px]" />
+								</div>
+								<p class="whitespace-nowrap">Membership 2026</p>
+							</div>
+							<div class="flex flex-col gap-[4.087px]">
+								<p class="text-[6.131px] whitespace-nowrap text-dash-alert">9 pending payments</p>
+								<p class="w-[89.409px] text-[7.153px]">€120 Collected this year</p>
+							</div>
+						</div>
+
+						<div class:list={[card, 'flex h-[97.073px] flex-1 flex-col justify-between']}>
+							<div class="flex items-center gap-[4.087px]">
+								<div class={iconTile}>
+									<img src={icon('chart-bar-2')} alt="" class="absolute top-[9.1px] left-[5.11px] size-[10.218px]" />
+								</div>
+								<p class="whitespace-nowrap">Next Event</p>
+							</div>
+							<div class="flex flex-col gap-[2.044px]">
+								<p class="text-[7.153px] whitespace-nowrap">Trip</p>
+								<p class="text-[6.131px] font-light">Wednesday, August 26 2026 | Paris</p>
+							</div>
+						</div>
+
+						<div class:list={[card, 'flex h-[97.073px] flex-1 flex-col justify-between']}>
+							<div class="flex items-center gap-[4.087px]">
+								<div class={iconTile}>
+									<img src={icon('chart-bar-3')} alt="" class="absolute top-[9.1px] left-[5.11px] size-[10.218px]" />
+								</div>
+								<p class="whitespace-nowrap">Recent Orders</p>
+							</div>
+							<div class="flex w-[143.055px] flex-col gap-[2.044px]">
+								<p class="text-[7.153px] whitespace-nowrap">Lucie Rousseau</p>
+								<p class="text-[6.131px] font-light">July 7, at 12:58</p>
+							</div>
+						</div>
+
+						<div class:list={[card, 'flex h-[97.073px] w-[179.84px] shrink-0 flex-col justify-between']}>
+							<div class="flex items-center gap-[4.087px]">
+								<div class={iconTile}>
+									<img src={icon('chart-bar-4')} alt="" class="absolute top-[9.1px] left-[5.11px] size-[10.218px]" />
+								</div>
+								<p class="whitespace-nowrap">Loaned equiment</p>
+							</div>
+							<div class="flex flex-col gap-[4.087px]">
+								<p class="text-[6.131px] whitespace-nowrap text-dash-alert">2 Overdue</p>
+								{
+									[
+										['JBL Speakers', 'Jul 4'],
+										['Epson Projector', 'Jul 12'],
+									].map(([item, date]) => (
+										<div class="flex items-center gap-[4.087px] text-[7.153px]">
+											<img src={icon('bullet')} alt="" class="size-[2.044px] shrink-0" />
+											<p class="flex-1 whitespace-nowrap">{item}</p>
+											<p class="whitespace-nowrap">{date}</p>
+										</div>
+									))
+								}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Sidebar -->
+			<div class="absolute top-[4.09px] left-[4.09px] flex h-[459.819px] w-[143.055px] flex-col gap-[3.576px]">
+				<div class="flex flex-col justify-center p-[12.262px]">
+					<img src={icon('logo')} alt="" class="h-[10.218px] w-[108.994px]" />
+				</div>
+
+				<div class="flex min-h-px flex-1 flex-col px-[12.262px] pb-[12.262px]">
+					<div class="flex min-h-px flex-1 flex-col gap-[4.087px]">
+						<div class="flex items-center gap-[4.087px] rounded-[4.087px] bg-[#f5f5f5] py-[5.109px]">
+							<div class={indicator}></div>
+							<img src={icon('house')} alt="" class="size-[9.196px] shrink-0" />
+							<p class={menuLabel}>Dashboard</p>
+						</div>
+
+						<div class="flex flex-col gap-[4.087px]">
+							{
+								menuGroups.map((group) => (
+									<div class="flex flex-col">
+										<div class="flex items-center gap-[4.087px] rounded-[4.087px] bg-white">
+											<p class="flex-1 text-[5.109px] leading-[1.1] font-semibold text-[#7c7c80] uppercase [text-box:trim-both_cap_alphabetic]">
+												{group.title}
+											</p>
+											<img src={icon(group.caret)} alt="" class="size-[10.218px] shrink-0" />
+										</div>
+										<div
+											class="flex w-[130.793px] flex-col justify-center"
+											style={`height:${group.height}px`}
+										>
+											{group.items.map(([name, label]) => (
+												<div class="flex items-center gap-[4.087px] rounded-[4.087px] bg-white py-[4.087px]">
+													<div class:list={[indicator, 'opacity-0']} />
+													<img src={icon(name)} alt="" class="size-[9.196px] shrink-0" />
+													<p class={menuLabel}>{label}</p>
+												</div>
+											))}
+										</div>
+									</div>
+								))
+							}
+						</div>
+					</div>
+				</div>
+
+				<div
+					class="flex flex-col gap-[4.087px] border-t-[0.511px] border-[#dbdbdb] bg-white px-[12.262px] py-[8.175px]"
+				>
+					{
+						secondaryMenu.map(([name, label]) => (
+							<div class="flex items-center gap-[4.087px] rounded-[4.087px] bg-white py-[5.109px]">
+								<div class:list={[indicator, 'opacity-0']} />
+								<img src={icon(name)} alt="" class="size-[9.196px] shrink-0" />
+								<p class={menuLabel}>{label}</p>
+							</div>
+						))
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

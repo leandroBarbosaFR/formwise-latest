@@ -1,0 +1,14 @@
+---
+// 1px rule exported from Figma (stroke colour and opacity live in the SVG)
+interface Props {
+	src: string;
+	class?: string;
+}
+const { src, class: className } = Astro.props;
+---
+
+<div class:list={['relative h-0 w-full shrink-0', className]} aria-hidden="true">
+	<div class="absolute inset-[-1px_0_0_0]">
+		<img src={src} alt="" class="block size-full max-w-none" />
+	</div>
+</div>

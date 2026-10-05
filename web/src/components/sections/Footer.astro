@@ -1,0 +1,129 @@
+---
+import type { SiteContext } from '../../lib/data';
+import { fillTemplate, homePath, linkAttributes, resolveHref } from '../../lib/links';
+import ButtonLink from '../ui/ButtonLink.astro';
+import LanguageSwitcher from '../ui/LanguageSwitcher.astro';
+import Divider from './Divider.astro';
+
+interface Props {
+	ctx: SiteContext;
+}
+const { ctx } = Astro.props;
+const { footer, settings } = ctx.layout;
+const linkContext = { lang: ctx.lang, settings };
+const strings = settings?.strings ?? {};
+const hasCta = footer?.ctaHeading || footer?.ctaPrimary?.label;
+---
+
+<footer class="p-6">
+	<div class="@container">
+		<!-- Same rounded, inset card as the hero so the page opens and closes on the brand blue -->
+		<div class="relative overflow-clip rounded-xl bg-brand text-white [--u:calc(100cqw/1392)]">
+			<div class="relative flex flex-col gap-16 px-6 pt-16 sm:px-10 lg:px-16 lg:pt-24">
+				{
+					hasCta && (
+						<>
+							<div class="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
+								<div class="flex max-w-[561px] flex-col gap-4">
+									{footer?.ctaHeading && <h2 class="type-h1 text-[36px] sm:text-[48px]">{footer.ctaHeading}</h2>}
+									{footer?.ctaText && <p class="type-body max-w-[395px] text-white/70">{footer.ctaText}</p>}
+								</div>
+								<div class="flex flex-wrap gap-2">
+									<ButtonLink
+										button={footer?.ctaPrimary}
+										ctx={ctx}
+										class="rounded-full bg-white px-6 py-[17px] text-sm leading-[1.2] tracking-[-0.02em] text-brand transition [text-box:trim-both_cap_alphabetic] hover:bg-brand-soft"
+									/>
+									<ButtonLink
+										button={footer?.ctaSecondary}
+										ctx={ctx}
+										class="glass rounded-full px-6 py-[17px] text-sm leading-[1.2] tracking-[-0.02em] text-white transition [text-box:trim-both_cap_alphabetic] hover:bg-white/10"
+									/>
+								</div>
+							</div>
+							<Divider src="/figma/faq-line.svg" />
+						</>
+					)
+				}
+
+				<div class="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[1.5fr_repeat(4,1fr)]">
+					<div class="col-span-2 flex flex-col gap-4 md:col-span-1">
+						<a href={homePath(ctx.lang)} class="self-start">
+							<img
+								src="/figma/dash-logo.svg"
+								alt={settings?.siteName ?? 'Formwise'}
+								width="109"
+								height="10"
+								class="h-4 w-auto brightness-0 invert"
+							/>
+						</a>
+						{footer?.tagline && <p class="type-body max-w-[260px] text-white/70">{footer.tagline}</p>}
+						{
+							settings?.socialLinks?.length ? (
+								<ul class="flex flex-wrap gap-x-4 gap-y-2">
+									{settings.socialLinks.map((social) => (
+										<li>
+											<a
+												href={social.url}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="type-body font-normal text-white transition hover:text-white/60"
+											>
+												{social.platform}
+											</a>
+										</li>
+									))}
+								</ul>
+							) : null
+						}
+					</div>
+					{
+						footer?.columns?.map((column) => (
+							<nav aria-label={column.title} class="flex flex-col gap-4">
+								<p class="type-body font-normal text-mist">{column.title}</p>
+								<ul class="flex flex-col gap-3">
+									{column.links?.map((item) => (
+										<li>
+											<a
+												href={resolveHref(item.link, linkContext)}
+												class="type-body font-normal text-white transition hover:text-white/60"
+												{...linkAttributes(item.link)}
+											>
+												{item.label}
+											</a>
+										</li>
+									))}
+								</ul>
+							</nav>
+						))
+					}
+				</div>
+
+				<div class="flex flex-col gap-4 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+					<p class="type-small text-white/60">{fillTemplate(footer?.copyright, { year: new Date().getFullYear() })}</p>
+					<div class="flex items-center gap-2">
+						<LanguageSwitcher ctx={ctx} placement="up" />
+						<a
+							href="#top"
+							aria-label={strings.backToTop ?? 'Back to top'}
+							class="glass flex size-10 items-center justify-center rounded-full text-white transition hover:bg-white/10"
+						>
+							↑
+						</a>
+					</div>
+				</div>
+			</div>
+
+			<!-- Oversized wordmark bleeding off the bottom edge -->
+			<div class="relative mt-10 h-[calc(200*var(--u))] overflow-hidden" aria-hidden="true">
+				<img
+					src="/figma/formwise-type.svg"
+					alt=""
+					width="1344"
+					height="259.881"
+					class="absolute top-0 left-1/2 h-auto w-[calc(1344*var(--u))] max-w-none -translate-x-1/2 opacity-15"
+				/>
+			</div>
+		</div>
+	</div>
+</footer>

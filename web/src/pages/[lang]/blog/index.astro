@@ -1,0 +1,26 @@
+---
+import { sanityClient } from 'sanity:client';
+import PageView from '../../../components/PageView.astro';
+import { getLanguages, getLayout, getSiteContext } from '../../../lib/data';
+import { alternatesFor } from '../../../lib/links';
+import { PAGE_BY_ID_QUERY } from '../../../lib/queries';
+import type { Page } from '../../../lib/types';
+
+export async function getStaticPaths() {
+	const languages = await getLanguages();
+	const paths = await Promise.all(
+		languages.map(async (lang) => {
+			const { settings } = await getLayout(lang);
+			return settings?.blogPageId ? { params: { lang }, props: { blogPageId: settings.blogPageId } } : null;
+		}),
+	);
+	return paths.filter((path) => path !== null);
+}
+
+const { lang } = Astro.params;
+const { blogPageId } = Astro.props;
+const page = await sanityClient.fetch<Page>(PAGE_BY_ID_QUERY, { id: blogPageId, lang });
+const ctx = await getSiteContext(lang, alternatesFor(page.translations, await getLanguages(), 'blog'));
+---
+
+<PageView page={page} ctx={ctx} />

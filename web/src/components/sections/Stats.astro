@@ -1,0 +1,23 @@
+---
+import type { Section } from '../../lib/types';
+
+interface Props {
+	section: Section;
+}
+const { section } = Astro.props;
+const items: { _key: string; value: string; label: string }[] = section.items ?? [];
+---
+
+<section id={section.anchorId} class="mx-auto max-w-[1440px] px-6 py-20 lg:py-[120px]">
+	{section.heading && <h2 class="type-h2 mx-auto mb-16 max-w-[561px] text-center">{section.heading}</h2>}
+	<dl class="grid grid-cols-2 gap-px overflow-clip rounded-2xl border border-black/10 bg-black/10 lg:grid-cols-4">
+		{
+			items.map((item) => (
+				<div class="flex flex-col gap-2 bg-white px-6 py-10 text-center">
+					<dt class="type-body order-2 text-slate">{item.label}</dt>
+					<dd class="type-h1 order-1 text-brand">{item.value}</dd>
+				</div>
+			))
+		}
+	</dl>
+</section>

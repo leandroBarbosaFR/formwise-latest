@@ -1,0 +1,25 @@
+---
+import { imageDimensions, urlFor, type SanityImage } from '../../lib/sanity';
+
+interface Props {
+	node: SanityImage & { caption?: string };
+}
+const { node } = Astro.props;
+const size = imageDimensions(node);
+const width = Math.min(size?.width ?? 1440, 1440);
+---
+
+{
+	node.asset && (
+		<figure>
+			<img
+				src={urlFor(node).width(width).url()}
+				alt={node.alt ?? ''}
+				width={width}
+				height={size ? Math.round((width / size.width) * size.height) : undefined}
+				loading="lazy"
+			/>
+			{node.caption && <figcaption>{node.caption}</figcaption>}
+		</figure>
+	)
+}

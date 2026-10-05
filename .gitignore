@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+web/.astro/
+
+# Local environment (see web/.env.example)
+.env
+.env.*
+!.env.example
+
+# Sanity CLI / Blueprint local state
+.sanity/
+
+# Font files the website doesn't use. Desktop fonts are usually not licensed for redistribution.
+web/public/fonts/**/Desktop/
+web/public/fonts/**/*.ttf
+
+# Logs and OS files
+*.log
+.DS_Store
+.idea/
