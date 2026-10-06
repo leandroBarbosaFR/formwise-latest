@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "npm --prefix web run dev",
+    "dev:studio": "npm --prefix studio run dev",
+    "build": "npm --prefix web run build",
     "functions:test": "sanity functions test translate --dataset production --with-user-token",
     "functions:deploy": "sanity blueprints deploy"
   },

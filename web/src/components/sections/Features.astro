@@ -87,7 +87,7 @@ const panel = 'absolute top-1/2 left-1/2 h-[352px] w-[332px] -translate-1/2 over
 				const background = backgrounds[i % backgrounds.length];
 				return (
 				<div class="flex flex-col gap-5">
-					<div class="relative h-[504px] overflow-clip rounded-2xl bg-brand" aria-hidden="true">
+					<div class="relative h-[504px] overflow-clip rounded-2xl bg-brand" aria-hidden="true" data-feature-card>
 						<img
 							src={img('dash-bg.png')}
 							alt=""
@@ -106,8 +106,8 @@ const panel = 'absolute top-1/2 left-1/2 h-[352px] w-[332px] -translate-1/2 over
 							<div class:list={[panel, 'flex flex-col gap-4 p-6']}>
 								<p class="type-h4">Your Members</p>
 								<ul class="flex flex-col gap-[33px]">
-									{members.map((m) => (
-										<li class="flex items-center gap-3">
+									{members.map((m, index) => (
+										<li class="fx-up flex items-center gap-3" style={`--i:${index}`}>
 											<Avatar size={40} bg={m.bg} under={m.under} over={m.over} />
 											<div class="flex flex-1 flex-col gap-1">
 												<p class="text-base leading-[1.2] tracking-[-0.02em]">{m.name}</p>
@@ -133,14 +133,14 @@ const panel = 'absolute top-1/2 left-1/2 h-[352px] w-[332px] -translate-1/2 over
 										<p class="text-[19.429px] leading-[1.2] tracking-[-0.02em]">€ 20,00</p>
 									</div>
 								</div>
-								{payers.map((p) => (
+								{payers.map((p, index) => (
 									<Avatar
 										size={p.size}
 										bg={p.bg}
 										under={p.under}
 										over={p.over}
-										class="absolute"
-										style={`left:${p.left}px;top:${p.top}px`}
+										class="fx-pop absolute"
+										style={`left:${p.left}px;top:${p.top}px;--i:${index}`}
 									/>
 								))}
 							</div>
@@ -149,11 +149,30 @@ const panel = 'absolute top-1/2 left-1/2 h-[352px] w-[332px] -translate-1/2 over
 						{card.illustration === 'donations' && (
 							<>
 								<div class={panel}>
-									<img src={img('donation-ellipse-11.svg')} alt="" class="absolute top-1/2 left-[calc(50%-0.33px)] size-[296px] max-w-none -translate-1/2" />
-									<img src={img('donation-ellipse-12.svg')} alt="" class="absolute top-1/2 left-[calc(50%-0.33px)] size-[416px] max-w-none -translate-1/2" />
 									<img src={img('donation-ellipse-10.svg')} alt="" class="absolute top-1/2 left-[calc(50%-0.33px)] size-[190px] max-w-none -translate-1/2" />
 									<div class="absolute top-0 left-0 h-[304px] w-full bg-linear-to-b from-white/80 to-white/0" />
 									<div class="absolute bottom-0 left-0 h-[304px] w-full bg-linear-to-t from-white/80 to-white/0" />
+									{/* Above the white fades so the moving arcs stay visible */}
+									<svg viewBox="0 0 296 296" class="fx-spin-right absolute top-1/2 left-[calc(50%-0.33px)] size-[296px] max-w-none -translate-1/2" aria-hidden="true">
+											<defs>
+												<linearGradient id="ring-middle" x1="0" y1="0" x2="1" y2="1">
+													<stop offset="0" stop-color="#023d9d" stop-opacity="0.55" />
+													<stop offset="0.5" stop-color="#023d9d" stop-opacity="0.06" />
+													<stop offset="1" stop-color="#023d9d" stop-opacity="0.06" />
+												</linearGradient>
+											</defs>
+											<circle cx="148" cy="148" r="147.5" fill="none" stroke="url(#ring-middle)" />
+										</svg>
+									<svg viewBox="0 0 416 416" class="fx-spin-left absolute top-1/2 left-[calc(50%-0.33px)] size-[416px] max-w-none -translate-1/2" aria-hidden="true">
+											<defs>
+												<linearGradient id="ring-outer" x1="0" y1="0" x2="1" y2="1">
+													<stop offset="0" stop-color="#023d9d" stop-opacity="0.55" />
+													<stop offset="0.5" stop-color="#023d9d" stop-opacity="0.06" />
+													<stop offset="1" stop-color="#023d9d" stop-opacity="0.06" />
+												</linearGradient>
+											</defs>
+											<circle cx="208" cy="208" r="207.5" fill="none" stroke="url(#ring-outer)" />
+										</svg>
 									<p class="type-h4 absolute top-6 right-6 left-6">Donations</p>
 									<img src={img('donation-heart.svg')} alt="" class="absolute top-1/2 left-[calc(50%-0.33px)] size-[120px] -translate-1/2" />
 								</div>
@@ -175,3 +194,77 @@ const panel = 'absolute top-1/2 left-1/2 h-[352px] w-[332px] -translate-1/2 over
 		}
 	</div>
 </section>
+
+<style is:global>
+	/* Feature card animations, played when each card scrolls into view (see script below).
+	   `data-animate` is only set when motion is allowed, so without it everything is visible. */
+
+	/* Members: rows rise in one after another */
+	[data-animate] .fx-up {
+		opacity: 0;
+	}
+	[data-animate][data-inview] .fx-up {
+		animation: fx-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+		animation-delay: calc(150ms + var(--i, 0) * 130ms);
+	}
+	@keyframes fx-up {
+		from {
+			opacity: 0;
+			transform: translateY(28px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	/* Payments: avatars grow from nothing to their size, with a little overshoot */
+	[data-animate] .fx-pop {
+		transform: scale(0);
+	}
+	[data-animate][data-inview] .fx-pop {
+		animation: fx-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+		animation-delay: calc(200ms + var(--i, 0) * 110ms);
+	}
+	@keyframes fx-pop {
+		from {
+			transform: scale(0);
+		}
+		to {
+			transform: scale(1);
+		}
+	}
+
+	/* Donations: the rings rotate slowly in opposite directions, on a loop.
+	   `rotate` composes with Tailwind's `translate`, so the rings stay centred. */
+	[data-inview] .fx-spin-left {
+		animation: fx-spin 24s linear infinite reverse;
+	}
+	[data-inview] .fx-spin-right {
+		animation: fx-spin 18s linear infinite;
+	}
+	@keyframes fx-spin {
+		to {
+			rotate: 360deg;
+		}
+	}
+</style>
+
+<script>
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const cards = document.querySelectorAll<HTMLElement>('[data-feature-card]');
+
+	if (!reduceMotion && 'IntersectionObserver' in window) {
+		cards.forEach((card) => (card.dataset.animate = ''));
+		const observer = new IntersectionObserver(
+			(entries) =>
+				entries.forEach((entry) => {
+					if (!entry.isIntersecting) return;
+					(entry.target as HTMLElement).dataset.inview = '';
+					observer.unobserve(entry.target);
+				}),
+			{ threshold: 0.35 },
+		);
+		cards.forEach((card) => observer.observe(card));
+	}
+</script>
