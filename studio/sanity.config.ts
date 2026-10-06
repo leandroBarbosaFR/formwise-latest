@@ -53,7 +53,8 @@ export default defineConfig({
     newDocumentOptions: (prev, {creationContext}) => {
       if (creationContext.type !== 'global') return prev
       return [
-        ...prev.filter((item) => !LANGUAGE_AWARE_TYPES.includes(item.templateId)),
+        // Integrations is a singleton, opened from the structure only
+        ...prev.filter((item) => !LANGUAGE_AWARE_TYPES.includes(item.templateId) && item.templateId !== 'integrations'),
         ...LOCALIZED_TYPES.map((schemaType) => ({
           templateId: `${schemaType}-language`,
           parameters: {language: BASE_LANGUAGE},

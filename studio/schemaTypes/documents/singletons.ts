@@ -82,6 +82,7 @@ export const settingsType = defineType({
         defineField({name: 'menu', title: 'Menu button label', type: 'string', initialValue: 'Menu'}),
         defineField({name: 'close', title: 'Close button label', type: 'string', initialValue: 'Close'}),
         defineField({name: 'backToTop', type: 'string', initialValue: 'Back to top'}),
+        defineField({name: 'cookieSettings', title: 'Cookie settings link', type: 'string', initialValue: 'Cookie settings'}),
         defineField({name: 'skipToContent', type: 'string', initialValue: 'Skip to content'}),
         defineField({name: 'notFoundTitle', type: 'string', initialValue: 'Page not found'}),
         defineField({name: 'notFoundText', type: 'string', initialValue: 'The page you are looking for doesn’t exist or has moved.'}),

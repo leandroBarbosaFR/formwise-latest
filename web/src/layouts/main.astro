@@ -4,16 +4,20 @@ import Footer from '../components/sections/Footer.astro';
 import type { SiteContext } from '../lib/data';
 import { BASE_LANGUAGE } from '../lib/languages';
 import { urlFor } from '../lib/sanity';
+import { ogLocale, siteGraph } from '../lib/seo';
 import type { Seo } from '../lib/types';
 
 interface Props {
 	ctx: SiteContext;
 	title?: string;
 	seo?: Seo;
-	// Article metadata for blog posts
 	type?: 'website' | 'article';
+	// Blog post metadata for Open Graph
+	article?: { publishedTime?: string; modifiedTime?: string; author?: string; section?: string };
+	// Page-specific structured data, added to the site-wide Organization and WebSite
+	jsonLd?: Record<string, unknown>[];
 }
-const { ctx, title, seo, type = 'website' } = Astro.props;
+const { ctx, title, seo, type = 'website', article, jsonLd = [] } = Astro.props;
 const { settings } = ctx.layout;
 const defaults = settings?.seo ?? {};
 
@@ -25,12 +29,60 @@ const image = seo?.image ?? defaults.image;
 const noIndex = seo?.noIndex ?? defaults.noIndex;
 const absolute = (path: string) => (Astro.site ? new URL(path, Astro.site).href : path);
 const alternates = Object.entries<string>(ctx.alternates);
+const canonical = absolute(Astro.url.pathname);
+const ogImage = image ? urlFor(image).width(1200).height(630).fit('crop').url() : undefined;
+const integrations = ctx.layout.integrations;
+
+// One JSON-LD graph per page. `<` is escaped so content can never close the script tag.
+const structuredData = JSON.stringify({ '@context': 'https://schema.org', '@graph': [...siteGraph(ctx), ...jsonLd] }).replace(
+	/</g,
+	'\\u003c',
+);
+
+// Axeptio cookie banner, configured in Sanity → Integrations. Each language can have its own banner.
+const axeptio = ctx.layout.integrations?.axeptio;
+const banners = axeptio?.cookiesVersions ?? [];
+const gtmId = ctx.layout.integrations?.googleTagManagerId;
+const cookiesVersion = (
+	banners.find((b) => b.language === ctx.lang) ??
+	banners.find((b) => b.language === BASE_LANGUAGE) ??
+	banners[0]
+)?.version;
 ---
 
 <html lang={ctx.lang}>
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
+		{
+			gtmId && (
+				<script is:inline define:vars={{ gtmId }}>
+					// Google Consent Mode v2: everything is refused until the visitor accepts in the Axeptio banner
+					window.dataLayer = window.dataLayer || [];
+					function gtag() {
+						dataLayer.push(arguments);
+					}
+					gtag('consent', 'default', {
+						ad_storage: 'denied',
+						ad_user_data: 'denied',
+						ad_personalization: 'denied',
+						analytics_storage: 'denied',
+						wait_for_update: 500,
+					});
+					// Google Tag Manager
+					(function (w, d, s, l, i) {
+						w[l] = w[l] || [];
+						w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+						var f = d.getElementsByTagName(s)[0],
+							j = d.createElement(s),
+							dl = l != 'dataLayer' ? '&l=' + l : '';
+						j.async = true;
+						j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+						f.parentNode.insertBefore(j, f);
+					})(window, document, 'script', 'dataLayer', gtmId);
+				</script>
+			)
+		}
 		<link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="shortcut icon" href="/favicon.ico" />
@@ -42,8 +94,8 @@ const alternates = Object.entries<string>(ctx.alternates);
 
 		<title>{fullTitle}</title>
 		{description && <meta name="description" content={description} />}
-		{noIndex && <meta name="robots" content="noindex" />}
-		{Astro.site && <link rel="canonical" href={absolute(Astro.url.pathname)} />}
+		<meta name="robots" content={noIndex ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1'} />
+		<link rel="canonical" href={canonical} />
 		{
 			alternates.map(([lang, href]) => (
 				<link rel="alternate" hreflang={lang} href={absolute(href)} />
@@ -54,16 +106,73 @@ const alternates = Object.entries<string>(ctx.alternates);
 				<link rel="alternate" hreflang="x-default" href={absolute(ctx.alternates[BASE_LANGUAGE])} />
 			)
 		}
+		<link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+		<meta name="theme-color" content="#023d9d" />
+		<link rel="preconnect" href="https://cdn.sanity.io" crossorigin />
+		{integrations?.googleSiteVerification && <meta name="google-site-verification" content={integrations.googleSiteVerification} />}
+		{integrations?.bingSiteVerification && <meta name="msvalidate.01" content={integrations.bingSiteVerification} />}
 
 		<meta property="og:type" content={type} />
 		<meta property="og:site_name" content={siteName} />
+		<meta property="og:url" content={canonical} />
 		<meta property="og:title" content={pageTitle ?? siteName} />
 		{description && <meta property="og:description" content={description} />}
-		{image && <meta property="og:image" content={urlFor(image).width(1200).height(630).fit('crop').url()} />}
-		<meta property="og:locale" content={ctx.lang} />
+		{
+			ogImage && (
+				<>
+					<meta property="og:image" content={ogImage} />
+					<meta property="og:image:width" content="1200" />
+					<meta property="og:image:height" content="630" />
+					<meta property="og:image:alt" content={image?.alt || pageTitle || siteName} />
+				</>
+			)
+		}
+		<meta property="og:locale" content={ogLocale(ctx.lang)} />
+		{
+			alternates
+				.filter(([lang]) => lang !== ctx.lang)
+				.map(([lang]) => <meta property="og:locale:alternate" content={ogLocale(lang)} />)
+		}
+		{article?.publishedTime && <meta property="article:published_time" content={article.publishedTime} />}
+		{article?.modifiedTime && <meta property="article:modified_time" content={article.modifiedTime} />}
+		{article?.author && <meta property="article:author" content={article.author} />}
+		{article?.section && <meta property="article:section" content={article.section} />}
 		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={pageTitle ?? siteName} />
+		{description && <meta name="twitter:description" content={description} />}
+		{ogImage && <meta name="twitter:image" content={ogImage} />}
+
+		<script type="application/ld+json" set:html={structuredData} />
+
+		{
+			axeptio?.clientId && (
+				<script is:inline define:vars={{ clientId: axeptio.clientId, cookiesVersion }}>
+					window.axeptioSettings = cookiesVersion ? { clientId, cookiesVersion } : { clientId };
+					(function (d, s) {
+						var t = d.getElementsByTagName(s)[0],
+							e = d.createElement(s);
+						e.async = true;
+						e.src = 'https://static.axept.io/sdk.js';
+						t.parentNode.insertBefore(e, t);
+					})(document, 'script');
+				</script>
+			)
+		}
 	</head>
 	<body>
+		{
+			gtmId && (
+				<noscript>
+					<iframe
+						src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
+						height="0"
+						width="0"
+						style="display:none;visibility:hidden"
+						title="Google Tag Manager"
+					/>
+				</noscript>
+			)
+		}
 		<a
 			href="#content"
 			class="sr-only z-50 rounded-full bg-white px-4 py-2 text-sm focus:not-sr-only focus:fixed focus:top-4 focus:left-4"

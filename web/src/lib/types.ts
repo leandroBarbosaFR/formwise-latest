@@ -39,6 +39,7 @@ export interface Strings {
 	menu?: string;
 	close?: string;
 	backToTop?: string;
+	cookieSettings?: string;
 	skipToContent?: string;
 	notFoundTitle?: string;
 	notFoundText?: string;
@@ -75,7 +76,18 @@ export interface Footer {
 	copyright?: string;
 }
 
+export interface Integrations {
+	googleSiteVerification?: string;
+	bingSiteVerification?: string;
+	googleTagManagerId?: string;
+	axeptio?: {
+		clientId?: string;
+		cookiesVersions?: { language: string; version: string }[];
+	};
+}
+
 export interface LayoutData {
+	integrations?: Integrations | null;
 	settings: Settings | null;
 	header: Header | null;
 	footer: Footer | null;
@@ -97,6 +109,7 @@ export interface Section {
 
 export interface Page {
 	_id: string;
+	_updatedAt?: string;
 	_type: 'page';
 	title: string;
 	slug?: string;
@@ -120,6 +133,7 @@ export interface PostCard {
 
 export interface Post extends PostCard {
 	_type: 'post';
+	_updatedAt?: string;
 	language: string;
 	body?: RichText;
 	seo?: Seo;

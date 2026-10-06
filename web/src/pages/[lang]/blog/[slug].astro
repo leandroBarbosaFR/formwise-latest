@@ -9,6 +9,7 @@ import { alternatesFor, blogPath, fillTemplate } from '../../../lib/links';
 import { POST_PATHS_QUERY, POST_QUERY } from '../../../lib/queries';
 import { minutesToRead } from '../../../lib/richText';
 import { hasImage, imageDimensions, urlFor } from '../../../lib/sanity';
+import { postGraph } from '../../../lib/seo';
 import type { Post } from '../../../lib/types';
 
 export async function getStaticPaths() {
@@ -27,9 +28,23 @@ const category = post.categories?.find(Boolean);
 const cover = hasImage(post.coverImage) ? post.coverImage : undefined;
 const coverSize = imageDimensions(cover);
 const related = (post.related ?? []).filter(Boolean);
+const jsonLd = postGraph(ctx, post, Astro.url.pathname);
+const article = {
+	publishedTime: post.publishedAt,
+	modifiedTime: post._updatedAt,
+	author: post.author?.name,
+	section: category?.title,
+};
 ---
 
-<Layout ctx={ctx} title={post.title} seo={{ description: post.excerpt, image: cover, ...post.seo }} type="article">
+<Layout
+	ctx={ctx}
+	title={post.title}
+	seo={{ description: post.excerpt, image: cover, ...post.seo }}
+	type="article"
+	article={article}
+	jsonLd={jsonLd}
+>
 	<PageHeader section={{ eyebrow: category?.title, heading: post.title, text: post.excerpt }} ctx={ctx}>
 		<p class="type-small text-white/70">
 			<time datetime={post.publishedAt}>{date}</time>

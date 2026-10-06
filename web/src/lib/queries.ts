@@ -55,6 +55,12 @@ export const LANGUAGES_QUERY = defineQuery(
 const singleton = (type: string) => `coalesce(*[_id == "${type}-" + $lang][0], *[_id == "${type}-en"][0])`;
 
 export const LAYOUT_QUERY = defineQuery(`{
+	"integrations": *[_id == "integrations"][0]{
+		googleSiteVerification,
+		bingSiteVerification,
+		googleTagManagerId,
+		"axeptio": axeptio{clientId, cookiesVersions[]{language, version}}
+	},
 	"settings": ${singleton('settings')}{
 		siteName,
 		siteDescription,
@@ -83,7 +89,7 @@ export const LAYOUT_QUERY = defineQuery(`{
 	}
 }`);
 
-const PAGE_FIELDS = `_id, _type, title, "slug": slug.current, language, ${SEO}, ${SECTIONS}, ${TRANSLATIONS}`;
+const PAGE_FIELDS = `_id, _type, _updatedAt, title, "slug": slug.current, language, ${SEO}, ${SECTIONS}, ${TRANSLATIONS}`;
 
 export const PAGE_BY_ID_QUERY = defineQuery(`*[_id == $id][0]{${PAGE_FIELDS}}`);
 
@@ -107,6 +113,7 @@ export const POSTS_QUERY = defineQuery(
 export const POST_QUERY = defineQuery(`*[_type == "post" && language == $lang && slug.current == $slug][0]{
 	${POST_CARD},
 	_type,
+	_updatedAt,
 	language,
 	"body": body${RICH_TEXT},
 	${SEO},
@@ -117,3 +124,23 @@ export const POST_QUERY = defineQuery(`*[_type == "post" && language == $lang &&
 export const POST_PATHS_QUERY = defineQuery(
 	`*[_type == "post" && language in $languages && defined(slug.current)]{language, "slug": slug.current}`,
 );
+
+// Everything that belongs in the sitemap, with its translation group to link language versions
+export const SITEMAP_QUERY = defineQuery(
+	`*[_type in ["page", "post"] && language in $languages && defined(slug.current)]{
+		_id, _type, language, "slug": slug.current, _updatedAt, "noIndex": seo.noIndex,
+		"group": *[_type == "translation.metadata" && references(^._id)][0]._id
+	}`,
+);
+
+// Plain-text summary of the site for AI assistants (llms.txt), in the base language
+export const LLMS_QUERY = defineQuery(`{
+	"pages": *[_type == "page" && language == $lang && defined(slug.current) && seo.noIndex != true]{
+		_id, title, "slug": slug.current, "description": seo.description
+	},
+	"posts": *[_type == "post" && language == $lang && defined(slug.current)] | order(publishedAt desc){
+		title, "slug": slug.current, excerpt, publishedAt
+	},
+	"plans": *[_type == "plan" && language == $lang]{name, price, priceDetails, description, features, featured} | order(featured desc),
+	"faqs": *[_type == "faq" && language == $lang]{question, answer}
+}`);

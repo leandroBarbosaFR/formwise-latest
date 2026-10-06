@@ -100,7 +100,20 @@ const hasCta = footer?.ctaHeading || footer?.ctaPrimary?.label;
 				</div>
 
 				<div class="flex flex-col gap-4 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
-					<p class="type-small text-white/60">{fillTemplate(footer?.copyright, { year: new Date().getFullYear() })}</p>
+					<div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+						<p class="type-small text-white/60">{fillTemplate(footer?.copyright, { year: new Date().getFullYear() })}</p>
+						{
+							ctx.layout.integrations?.axeptio?.clientId && (
+								<button
+									type="button"
+									data-cookie-settings
+									class="type-small cursor-pointer text-white/60 underline-offset-4 transition hover:text-white hover:underline"
+								>
+									{strings.cookieSettings ?? 'Cookie settings'}
+								</button>
+							)
+						}
+					</div>
 					<div class="flex items-center gap-2">
 						<LanguageSwitcher ctx={ctx} placement="up" />
 						<a
@@ -127,3 +140,10 @@ const hasCta = footer?.ctaHeading || footer?.ctaPrimary?.label;
 		</div>
 	</div>
 </footer>
+
+<script>
+	// Reopens the Axeptio banner so visitors can change their cookie choices at any time
+	document.querySelectorAll('[data-cookie-settings]').forEach((button) =>
+		button.addEventListener('click', () => (window as { openAxeptioCookies?: () => void }).openAxeptioCookies?.()),
+	);
+</script>

@@ -14,6 +14,10 @@ const { PUBLIC_SANITY_PROJECT_ID, PUBLIC_SANITY_DATASET } = loadEnv(
 
 // https://astro.build/config
 export default defineConfig({
+	// Production domain, used for canonical and hreflang URLs
+	site: 'https://formwise.fr',
+	// One URL per page (/en/about/), so search engines never see duplicates
+	trailingSlash: 'always',
 	integrations: [
 		sanity({
 			projectId: PUBLIC_SANITY_PROJECT_ID,

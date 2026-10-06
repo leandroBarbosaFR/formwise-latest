@@ -23,4 +23,4 @@ const page = await sanityClient.fetch<Page>(PAGE_BY_ID_QUERY, { id: blogPageId, 
 const ctx = await getSiteContext(lang, alternatesFor(page.translations, await getLanguages(), 'blog'));
 ---
 
-<PageView page={page} ctx={ctx} />
+<PageView page={page} ctx={ctx} kind="blog" />

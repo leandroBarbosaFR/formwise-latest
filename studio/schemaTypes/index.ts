@@ -8,6 +8,7 @@ import {footerType, headerType, settingsType} from './documents/singletons'
 import {pageType} from './documents/page'
 import {authorType, categoryType, postType} from './documents/blog'
 import {faqType, planType, testimonialType} from './documents/shared'
+import {integrationsType} from './documents/integrations'
 
 export const schemaTypes = [
   // Documents
@@ -21,6 +22,7 @@ export const schemaTypes = [
   faqType,
   testimonialType,
   planType,
+  integrationsType,
   // Objects
   linkType,
   buttonType,

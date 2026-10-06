@@ -11,6 +11,7 @@ import {HelpCircleIcon} from '@sanity/icons/HelpCircle'
 import {CommentIcon} from '@sanity/icons/Comment'
 import {CreditCardIcon} from '@sanity/icons/CreditCard'
 import {StackIcon} from '@sanity/icons/Stack'
+import {PlugIcon} from '@sanity/icons/Plug'
 import {BASE_LANGUAGE, LANGUAGES} from './languages'
 
 const languageLabel = (id: string, title: string) => `${title} (${id.toUpperCase()})`
@@ -83,6 +84,11 @@ export const structure: StructureResolver = (S) =>
       localizedSingleton(S, 'settings', 'General management', ControlsIcon),
       localizedSingleton(S, 'header', 'Header', MenuIcon),
       localizedSingleton(S, 'footer', 'Footer', BlockElementIcon),
+      S.listItem()
+        .id('integrations')
+        .title('Integrations')
+        .icon(PlugIcon)
+        .child(S.document().schemaType('integrations').documentId('integrations').title('Integrations')),
       S.divider(),
       localizedList(S, 'page', 'Pages', DocumentIcon),
       S.divider(),
