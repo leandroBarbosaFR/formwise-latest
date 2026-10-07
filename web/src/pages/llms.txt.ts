@@ -11,7 +11,7 @@ import type { RichText } from '../lib/types';
 interface LlmsData {
 	pages: { _id: string; title: string; slug: string; description?: string }[];
 	posts: { title: string; slug: string; excerpt?: string; publishedAt: string }[];
-	plans: { name: string; price: string; priceDetails?: string[]; description?: string; features?: string[] }[];
+	plans: { name: string; monthlyPrice?: string; monthlyPriceDetails?: string[]; price: string; priceDetails?: string[]; description?: string; features?: string[] }[];
 	faqs: { question: string; answer?: RichText }[];
 }
 
@@ -43,7 +43,10 @@ export const GET: APIRoute = async () => {
 		data.plans
 			.map((plan) =>
 				[
-					`### ${plan.name}: ${plan.price}`,
+					`### ${plan.name}`,
+					plan.monthlyPrice && `Monthly: ${plan.monthlyPrice}`,
+					...(plan.monthlyPriceDetails ?? []),
+					`Yearly: ${plan.price}`,
 					...(plan.priceDetails ?? []),
 					plan.description,
 					...(plan.features ?? []).map((feature) => `- ${feature}`),

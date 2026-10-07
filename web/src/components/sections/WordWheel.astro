@@ -10,98 +10,156 @@ const words: string[] = section.words ?? [];
 
 <!--
 	Without JS (or with reduced motion) this renders the finished list.
-	The script adds `data-scrolly`: the section becomes a tall scroll track with a
-	pinned panel, and the words rise from below the fold one by one, stacking into the list.
+	The script adds `data-scrolly`: the section fills the screen, and when it reaches the top the
+	words rise in one by one (Figma "Scroll Prototype"), then the next scroll glides to the next section.
 -->
 <section id={section.anchorId} class="group bg-brand" data-word-wheel>
-	<div data-track>
-		<div
-			class="mx-auto flex min-h-[900px] max-w-[561px] flex-col items-center justify-center gap-16 px-6 py-24 text-center group-data-scrolly:sticky group-data-scrolly:top-0 group-data-scrolly:h-svh group-data-scrolly:min-h-0 group-data-scrolly:overflow-clip group-data-scrolly:py-0"
-		>
-			{section.eyebrow && <p data-eyebrow class="type-body font-normal text-mist">{section.eyebrow}</p>}
-			<ul class="flex flex-col gap-14 text-[36px] leading-[1.2] tracking-[-0.02em] text-white sm:text-[48px]">
-				{words.map((word) => <li data-item class="will-change-transform">{word}</li>)}
-			</ul>
-			{section.footnote && <p data-footnote class="type-body font-normal text-mist">{section.footnote}</p>}
-		</div>
+	<div
+		class="mx-auto flex min-h-[900px] max-w-[561px] flex-col items-center justify-center gap-16 px-6 py-24 text-center group-data-scrolly:h-svh group-data-scrolly:min-h-0 group-data-scrolly:overflow-clip group-data-scrolly:py-0"
+	>
+		{section.eyebrow && <p data-eyebrow class="type-body font-normal text-mist">{section.eyebrow}</p>}
+		<ul class="flex flex-col gap-14 text-[36px] leading-[1.2] tracking-[-0.02em] text-white sm:text-[48px]">
+			{words.map((word) => <li data-item class="will-change-transform">{word}</li>)}
+		</ul>
+		{section.footnote && <p data-footnote class="type-body font-normal text-mist">{section.footnote}</p>}
 	</div>
 </section>
 
 <script>
-	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	import { easeInOut, springAnimate, wait } from '../../lib/motion';
 
-	// Scroll distance spent on each step, in viewport heights
-	const STEP_SVH = 40;
-	// The eyebrow starts 48 design pixels lower and lifts as the section pins
-	const EYEBROW_LIFT = 48;
-	// The footnote lands 56 design pixels low with the last word, then settles
-	const FOOTNOTE_OVERSHOOT = 56;
-	// Words land at the top of the fold plus this, as in the design (945px on a 900px frame)
-	const BELOW_FOLD = 45;
-	// Steps of stillness at the end, so the finished list stays a moment before scrolling away
-	const HOLD = 0.75;
+	// Figma "Scroll Prototype": each step is Smart animate after a 200ms delay with this spring,
+	// and once all the text is in, the page moves on with Ease in and out over 1600ms.
+	const STEP_DELAY = 200;
+	const SPRING = { mass: 1, stiffness: 180, damping: 30 };
+	const EXIT = { delay: 200, duration: 1600 };
+	// Design pixels on the 900px-tall frame
+	const EYEBROW_LIFT = 48; // "Control" starts at 159 and settles at 111
+	const BELOW_FOLD = 45; // waiting words sit just under the fold (945 on a 900 frame)
+	const FOOTNOTE_OVERSHOOT = 56; // the footnote lands 56 low with the last word, then settles
+	const EXIT_DISTANCE = 1350; // frame 9: the section has moved 1350 up, showing half of the next one
 
-	// Smoothstep: each word settles before the next one moves in
-	const ease = (t: number) => t * t * (3 - 2 * t);
-	const clamp = (t: number) => Math.min(Math.max(t, 0), 1);
+	const SCROLL_KEYS = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' ']);
 
 	function setup(section: HTMLElement) {
-		const track = section.querySelector<HTMLElement>('[data-track]')!;
 		const eyebrow = section.querySelector<HTMLElement>('[data-eyebrow]');
 		const footnote = section.querySelector<HTMLElement>('[data-footnote]');
 		const items = [...section.querySelectorAll<HTMLElement>('[data-item]')];
-		const count = items.length;
-		if (count === 0) return;
+		if (items.length === 0) return;
 
-		// Step 0 lifts the eyebrow, steps 1…count bring in the words, the last one settles the footnote
-		const steps = count + 2;
 		section.dataset.scrolly = '';
-		track.style.height = `calc(100svh + ${(steps + HOLD) * STEP_SVH}svh)`;
+		// Already scrolled past (e.g. a reload halfway down the page): keep the finished list
+		if (section.getBoundingClientRect().top < 0) return;
 
-		// How far the words travel: from just below the fold to their place in the list
-		let rise = 0;
-		const measure = () => {
-			// offsetTop is relative to the sticky panel and ignores transforms
-			rise = window.innerHeight + BELOW_FOLD - items[0].offsetTop;
+		// Words wait just under the fold. Measured from the top of the section with offsetTop, which
+		// ignores transforms (the section and the words share the page as offset parent).
+		const measureRise = () => window.innerHeight + BELOW_FOLD - (items[0].offsetTop - section.offsetTop);
+		let rise = measureRise();
+		const step = (el: HTMLElement | null, from: number, to: number) =>
+			el && springAnimate(el, SPRING, (p) => ({ transform: `translate3d(0, ${from + (to - from) * p}px, 0)` }));
+		const park = (el: HTMLElement | null, y: number) => el?.animate([{ transform: `translate3d(0, ${y}px, 0)` }], { fill: 'forwards' });
+		const parkAll = () => {
+			park(eyebrow, EYEBROW_LIFT);
+			items.forEach((item) => park(item, rise));
+			park(footnote, rise);
+		};
+		parkAll();
+
+		// While the words come in (and while gliding out) the page doesn't scroll
+		let locked = false;
+		const block = (event: Event) => {
+			if (locked) event.preventDefault();
+		};
+		const blockKeys = (event: KeyboardEvent) => {
+			if (locked && SCROLL_KEYS.has(event.key)) event.preventDefault();
+		};
+		window.addEventListener('wheel', block, { passive: false });
+		window.addEventListener('touchmove', block, { passive: false });
+		window.addEventListener('keydown', blockKeys);
+		const lock = (on: boolean) => {
+			locked = on;
+			document.documentElement.style.overflow = on ? 'hidden' : '';
 		};
 
-		const update = () => {
-			const scrollable = track.offsetHeight - window.innerHeight;
-			const position = clamp(-track.getBoundingClientRect().top / scrollable) * (steps + HOLD);
-			const stepProgress = (step: number) => ease(clamp(position - step));
+		async function play() {
+			lock(true);
+			// Pin the section exactly to the top, wherever the scroll landed
+			window.scrollTo(0, window.scrollY + section.getBoundingClientRect().top);
+			// Fonts or a resize may have moved things since the page loaded
+			rise = measureRise();
+			parkAll();
 
-			if (eyebrow) eyebrow.style.transform = `translate3d(0, ${(1 - stepProgress(0)) * EYEBROW_LIFT}px, 0)`;
-			items.forEach((item, i) => {
-				item.style.transform = `translate3d(0, ${(1 - stepProgress(i + 1)) * rise}px, 0)`;
+			await wait(STEP_DELAY);
+			await step(eyebrow, EYEBROW_LIFT, 0);
+			for (const [i, item] of items.entries()) {
+				await wait(STEP_DELAY);
+				const last = i === items.length - 1;
+				// The footnote rides up with the last word
+				await Promise.all([step(item, rise, 0), last && step(footnote, rise, FOOTNOTE_OVERSHOOT)]);
+			}
+			await wait(STEP_DELAY);
+			await step(footnote, FOOTNOTE_OVERSHOOT, 0);
+
+			lock(false);
+			awaitExit();
+		}
+
+		// Once all the text is in, the next scroll down glides to the next section
+		function awaitExit() {
+			let touchY = 0;
+			const onTouchStart = (event: TouchEvent) => (touchY = event.touches[0].clientY);
+			const intent = (event: Event) => {
+				const down =
+					(event instanceof WheelEvent && event.deltaY > 0) ||
+					(event instanceof TouchEvent && touchY - event.touches[0].clientY > 10) ||
+					(event instanceof KeyboardEvent && ['ArrowDown', 'PageDown', ' '].includes(event.key));
+				// Only from the pinned position; anywhere else the page scrolls normally
+				if (!down || Math.abs(section.getBoundingClientRect().top) > 2) return;
+				event.preventDefault();
+				window.removeEventListener('wheel', intent);
+				window.removeEventListener('touchmove', intent);
+				window.removeEventListener('keydown', intent);
+				window.removeEventListener('touchstart', onTouchStart);
+				exit();
+			};
+			window.addEventListener('touchstart', onTouchStart, { passive: true });
+			window.addEventListener('wheel', intent, { passive: false });
+			window.addEventListener('touchmove', intent, { passive: false });
+			window.addEventListener('keydown', intent);
+		}
+
+		async function exit() {
+			lock(true);
+			await wait(EXIT.delay);
+			const start = window.scrollY;
+			const distance = (EXIT_DISTANCE / 900) * window.innerHeight;
+			const t0 = performance.now();
+			await new Promise<void>((resolve) => {
+				const frame = (now: number) => {
+					const t = Math.min((now - t0) / EXIT.duration, 1);
+					window.scrollTo(0, start + distance * easeInOut(t));
+					if (t < 1) requestAnimationFrame(frame);
+					else resolve();
+				};
+				requestAnimationFrame(frame);
 			});
-			if (footnote) {
-				// Rides up with the last word, then settles into place
-				const arrive = stepProgress(count);
-				const settle = stepProgress(count + 1);
-				const offset = (1 - arrive) * rise + arrive * (1 - settle) * FOOTNOTE_OVERSHOOT;
-				footnote.style.transform = `translate3d(0, ${offset}px, 0)`;
+			lock(false);
+		}
+
+		// Starts when the section reaches the top of the screen while scrolling down
+		let lastY = window.scrollY;
+		const onScroll = () => {
+			const down = window.scrollY > lastY;
+			lastY = window.scrollY;
+			if (down && section.getBoundingClientRect().top <= 0) {
+				window.removeEventListener('scroll', onScroll);
+				play();
 			}
 		};
-
-		let frame = 0;
-		const schedule = () => {
-			cancelAnimationFrame(frame);
-			frame = requestAnimationFrame(update);
-		};
-
-		measure();
-		update();
-		window.addEventListener('scroll', schedule, { passive: true });
-		window.addEventListener('resize', () => {
-			measure();
-			schedule();
-		});
-		// Word heights change once the brand font swaps in
-		document.fonts.ready.then(() => {
-			measure();
-			update();
-		});
+		window.addEventListener('scroll', onScroll, { passive: true });
 	}
 
-	if (!reduceMotion) document.querySelectorAll<HTMLElement>('[data-word-wheel]').forEach(setup);
+	if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		document.querySelectorAll<HTMLElement>('[data-word-wheel]').forEach(setup);
+	}
 </script>

@@ -13,6 +13,9 @@ const { section, ctx } = Astro.props;
 interface Plan {
 	_id: string;
 	name: string;
+	monthlyPrice?: string;
+	monthlyPriceDetails?: string[];
+	// Yearly price (named from before the monthly option existed)
 	price: string;
 	priceDetails?: string[];
 	description?: string;
@@ -22,14 +25,57 @@ interface Plan {
 	cta?: Button;
 }
 const plans: Plan[] = (section.plans ?? []).filter(Boolean);
+
+// Monthly is shown first unless the editor picked yearly. The switch only appears when there is
+// something to switch to; plans without a monthly price keep showing their yearly one.
+type Billing = 'monthly' | 'yearly';
+const hasMonthly = plans.some((plan) => plan.monthlyPrice);
+const initial: Billing = hasMonthly && section.defaultBilling !== 'yearly' ? 'monthly' : 'yearly';
+const billing = (plan: Plan): { period: Billing; price: string; details?: string[] }[] => [
+	...(hasMonthly
+		? [
+				{
+					period: 'monthly' as const,
+					price: plan.monthlyPrice ?? plan.price,
+					details: plan.monthlyPrice ? plan.monthlyPriceDetails : plan.priceDetails,
+				},
+			]
+		: []),
+	{ period: 'yearly', price: plan.price, details: plan.priceDetails },
+];
+const toggle = [
+	{ period: 'monthly', label: section.monthlyLabel ?? 'Monthly' },
+	{ period: 'yearly', label: section.yearlyLabel ?? 'Yearly', hint: section.yearlyHint },
+];
 ---
 
 <section
 	id={section.anchorId ?? 'pricing'}
 	class="mx-auto flex max-w-[1440px] flex-col items-center gap-8 px-6 py-20 lg:py-[120px]"
+	data-pricing
 >
 	{section.heading && <h2 class="type-h2 max-w-[561px] text-center">{section.heading}</h2>}
 	{section.text && <p class="type-body max-w-[395px] text-center">{section.text}</p>}
+
+	{
+		hasMonthly && (
+			<div role="group" aria-label={`${toggle[0].label} / ${toggle[1].label}`} class="flex rounded-full border border-black/10 bg-white p-1">
+				{toggle.map(({ period, label, hint }) => (
+					<button
+						type="button"
+						data-billing={period}
+						aria-pressed={period === initial ? 'true' : 'false'}
+						class="flex cursor-pointer items-center gap-2 rounded-full px-5 py-2 text-sm leading-[1.2] tracking-[-0.02em] text-black transition aria-pressed:bg-brand aria-pressed:text-white"
+					>
+						{label}
+						{hint && (
+							<span class="rounded bg-brand-soft px-1.5 py-0.5 text-xs leading-[1.3] font-demi text-brand">{hint}</span>
+						)}
+					</button>
+				))}
+			</div>
+		)
+	}
 
 	<div class="grid w-full grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
 		{
@@ -56,9 +102,13 @@ const plans: Plan[] = (section.plans ?? []).filter(Boolean);
 					<div class="relative flex w-full items-start gap-6 px-6">
 						<div class="flex min-w-0 flex-1 flex-col gap-1">
 							<h3 class="text-base leading-[1.2] font-medium">{plan.name}</h3>
-							<p class="text-[32px] leading-[1.2] font-medium">{plan.price}</p>
-							{plan.priceDetails?.map((line) => (
-								<p class="text-xs leading-[1.4] font-light whitespace-nowrap">{line}</p>
+							{billing(plan).map(({ period, price, details }) => (
+								<div data-period={period} hidden={period !== initial} class="flex flex-col gap-1">
+									<p class="text-[32px] leading-[1.2] font-medium">{price}</p>
+									{details?.map((line) => (
+										<p class="text-xs leading-[1.4] font-light whitespace-nowrap">{line}</p>
+									))}
+								</div>
 							))}
 						</div>
 						{plan.featured && plan.badge && (
@@ -107,3 +157,19 @@ const plans: Plan[] = (section.plans ?? []).filter(Boolean);
 		}
 	</div>
 </section>
+
+<script>
+	// Monthly / yearly switch: shows the matching price in every plan
+	document.querySelectorAll<HTMLElement>('[data-pricing]').forEach((section) => {
+		const buttons = [...section.querySelectorAll<HTMLButtonElement>('[data-billing]')];
+		buttons.forEach((button) =>
+			button.addEventListener('click', () => {
+				const period = button.dataset.billing;
+				buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+				section.querySelectorAll<HTMLElement>('[data-period]').forEach((price) => {
+					price.hidden = price.dataset.period !== period;
+				});
+			}),
+		);
+	});
+</script>

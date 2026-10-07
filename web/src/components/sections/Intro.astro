@@ -1,7 +1,7 @@
 ---
 // Splash played over the home hero on the first visit of a session (Figma "Intro Prototype"):
 // the camera pulls out of the logo's arch, a white sheet slides up over the logo,
-// then the hero fades in with the giant wordmark rising into place.
+// then the hero card fades in while the giant wordmark rises. Delays and spring match the prototype.
 ---
 
 <script is:inline>
@@ -11,7 +11,7 @@
 		if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !sessionStorage.getItem('formwise-intro')) {
 			document.documentElement.dataset.intro = '';
 			// If the animation script never runs, don't leave the page covered
-			window.__introFailsafe = setTimeout(() => delete document.documentElement.dataset.intro, 8000);
+			window.__introFailsafe = setTimeout(() => delete document.documentElement.dataset.intro, 15000);
 		}
 	} catch {}
 </script>
@@ -28,30 +28,31 @@
 	html[data-intro] [data-intro-overlay] {
 		display: block;
 	}
-	/* Hero starts hidden with the wordmark 136 design pixels lower, as in the third frame */
+	/* The page is white under the sheet (Figma frame 3): the hero card waits to fade in */
 	html[data-intro] [data-hero] {
 		opacity: 0;
-	}
-	html[data-intro] [data-hero-wordmark] {
-		transform: translateY(calc(136 * var(--u)));
 	}
 </style>
 
 <script>
+	import { lerp, springAnimate, wait } from '../../lib/motion';
+
 	const root = document.documentElement;
 	const overlay = document.querySelector<HTMLElement>('[data-intro-overlay]');
 
-	// Design artboard and logo geometry from Figma
+	// Figma "Intro Prototype": every step is Smart animate, after a delay, with the same spring
+	const DELAY = { zoom: 800, sheet: 2000, hero: 1 };
+	const SPRING = { mass: 1, stiffness: 20, damping: 10 };
+
+	// Logo geometry in the 1440×900 frames: frame 1 zooms into the arch, frame 2 centres the logo
 	const ARTBOARD = { width: 1440, height: 900 };
 	const LOGO = { width: 264.025, height: 39.6986 };
-	// First frame: the logo is 100x bigger and the screen centre sits inside the arch of the symbol
-	const START_SCALE = 26523.168 / LOGO.width;
-	const ARCH = { x: (720 + 1285) / 26523.168, y: (450 + 2106) / 3988 };
+	const ZOOMED = { left: -1285, top: -2106, width: 26523.168 };
+	// The hero wordmark sits 136 design pixels lower in frame 3 and rises in frame 4
+	const WORDMARK_RISE = 136;
 
-	const EASE = 'cubic-bezier(0.76, 0, 0.24, 1)';
-	const EASE_OUT = 'cubic-bezier(0.22, 1, 0.36, 1)';
-	const easeInOutQuart = (t: number) => (t < 0.5 ? 8 * t ** 4 : 1 - (-2 * t + 2) ** 4 / 2);
-	const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+	const springStep = (el: Element, frame: (p: number) => Keyframe) => springAnimate(el, SPRING, frame);
+	const mix = (from: number[], to: number[], p: number) => `rgb(${from.map((c, i) => Math.round(lerp(c, to[i], p))).join(' ')})`;
 
 	async function play(overlay: HTMLElement) {
 		clearTimeout((window as any).__introFailsafe);
@@ -63,61 +64,59 @@
 		const logo = overlay.querySelector<HTMLElement>('[data-intro-logo]')!;
 		const sheet = overlay.querySelector<HTMLElement>('[data-intro-sheet]')!;
 		const hero = document.querySelector<HTMLElement>('[data-hero]');
-		const wordmark = document.querySelector<HTMLElement>('[data-hero-wordmark]');
 
-		// Zoom out of the arch. Scale is interpolated on a log curve so the pull-out feels constant,
-		// and the logo is resized (not scaled) so the SVG stays sharp at every step.
+		// Frame 1 → 2: pull out of the arch to the centred logo, blue #0349aa → #023d9d.
+		// Frame 1 is scaled up on screens larger than the artboard so the arch still fills them.
+		// The logo is resized (not scaled) so the SVG stays sharp at every step.
 		const cx = innerWidth / 2;
 		const cy = innerHeight / 2;
-		const startScale = START_SCALE * Math.max(1, innerWidth / ARTBOARD.width, innerHeight / ARTBOARD.height);
-		// Where the arch point ends up once the logo is centred
-		const end = { x: cx + (ARCH.x - 0.5) * LOGO.width, y: cy + (ARCH.y - 0.5) * LOGO.height };
-		const frames = Array.from({ length: 61 }, (_, i) => {
-			const e = easeInOutQuart(i / 60);
-			const width = LOGO.width * startScale ** (1 - e);
-			const height = (width / LOGO.width) * LOGO.height;
-			const x = cx + (end.x - cx) * e - ARCH.x * width;
-			const y = cy + (end.y - cy) * e - ARCH.y * height;
-			return { width: `${width}px`, transform: `translate(${x}px, ${y}px)` };
+		const k = Math.max(1, innerWidth / ARTBOARD.width, innerHeight / ARTBOARD.height);
+		const from = {
+			x: cx + (ZOOMED.left - ARTBOARD.width / 2) * k,
+			y: cy + (ZOOMED.top - ARTBOARD.height / 2) * k,
+			width: ZOOMED.width * k,
+		};
+		const to = { x: cx - LOGO.width / 2, y: cy - LOGO.height / 2, width: LOGO.width };
+		const zoomAt = (p: number): Keyframe => ({
+			width: `${lerp(from.width, to.width, p)}px`,
+			transform: `translate(${lerp(from.x, to.x, p)}px, ${lerp(from.y, to.y, p)}px)`,
 		});
-		const ZOOM_MS = 1600;
-		logo.animate(frames, { duration: ZOOM_MS, delay: 200, fill: 'both' });
-		await overlay.animate([{ backgroundColor: '#0349aa' }, { backgroundColor: '#023d9d' }], {
-			duration: ZOOM_MS,
-			delay: 200,
-			easing: EASE,
-			fill: 'forwards',
-		}).finished;
+		logo.animate([zoomAt(0)], { fill: 'forwards' });
+		await wait(DELAY.zoom);
+		await Promise.all([
+			springStep(logo, zoomAt),
+			springStep(overlay, (p) => ({ backgroundColor: mix([3, 73, 170], [2, 61, 157], p) })),
+		]);
+		if (!hero) return;
 
-		// White sheet slides up over the logo
-		await wait(300);
-		await sheet.animate([{ transform: 'translateY(calc(100% + 20px))' }, { transform: 'none' }], {
-			duration: 900,
-			easing: EASE,
-			fill: 'forwards',
-		}).finished;
+		// Frame 2 → 3: the white page slides up over the logo
+		await wait(DELAY.sheet);
+		// Animates `translate`, the same property the class uses to park it below the screen
+		await springStep(sheet, (p) => ({ translate: `0 calc(${1 - p} * (100% + 20px))` }));
 
-		// The page underneath is white with the hero hidden, so the overlay can go
+		// The page underneath is white with the hero hidden, so the overlay can go without a seam
 		overlay.remove();
-		const reveal = [
-			hero?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 800, easing: 'ease-out', fill: 'forwards' }).finished,
-			wordmark?.animate([{ transform: getComputedStyle(wordmark).transform }, { transform: 'none' }], {
-				duration: 1200,
-				easing: EASE_OUT,
-				fill: 'forwards',
-			}).finished,
-		];
-		await Promise.all(reveal);
+
+		// Frame 3 → 4: the hero card fades in while the wordmark rises into place
+		await wait(DELAY.hero);
+		const wordmark = hero.querySelector<HTMLElement>('[data-hero-layer="wordmark"]');
+		const rise = WORDMARK_RISE * (hero.offsetWidth / 1392);
+		await Promise.all([
+			springStep(hero, (p) => ({ opacity: p })),
+			wordmark && springStep(wordmark, (p) => ({ transform: `translateY(${(1 - p) * rise}px)` })),
+		]);
+
 		delete root.dataset.intro;
-		hero?.getAnimations().forEach((animation) => animation.cancel());
-		wordmark?.getAnimations().forEach((animation) => animation.cancel());
+		[hero, wordmark].forEach((el) => el?.getAnimations().forEach((animation) => animation.cancel()));
 	}
 
 	if (overlay && 'intro' in root.dataset) {
-		play(overlay).catch(() => {
-			overlay.remove();
-			delete root.dataset.intro;
-		});
+		play(overlay)
+			.catch(() => {})
+			.finally(() => {
+				overlay.remove();
+				delete root.dataset.intro;
+			});
 	} else {
 		overlay?.remove();
 	}

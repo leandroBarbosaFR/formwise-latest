@@ -27,6 +27,8 @@ const { heading, text, cta, backgroundImage, foregroundImage } = section;
 						alt=""
 						aria-hidden="true"
 						fetchpriority="high"
+						data-hero-layer="bg"
+						data-parallax="0.3"
 						class="absolute bottom-[calc(-239*var(--u))] left-[calc(50%+38*var(--u))] h-[calc(1152*var(--u))] w-[calc(1468*var(--u))] max-w-none -translate-x-1/2 object-cover"
 					/>
 				)
@@ -37,7 +39,8 @@ const { heading, text, cta, backgroundImage, foregroundImage } = section;
 				alt={ctx.layout.settings?.siteName ?? 'Formwise'}
 				width="1344"
 				height="259.881"
-				data-hero-wordmark
+				data-hero-layer="wordmark"
+				data-parallax="0.15"
 				class="absolute bottom-[calc(317.67*var(--u))] left-1/2 h-auto w-[calc(1344*var(--u))] max-w-none -translate-x-1/2"
 			/>
 
@@ -46,6 +49,8 @@ const { heading, text, cta, backgroundImage, foregroundImage } = section;
 					<img
 						src={urlFor(foregroundImage).width(2400).url()}
 						alt={foregroundImage.alt ?? ''}
+						data-hero-layer="arch"
+						data-parallax="-0.12"
 						class="absolute bottom-[calc(-239*var(--u))] left-[calc(50%+38*var(--u))] h-[calc(1152*var(--u))] w-[calc(1468*var(--u))] max-w-none -translate-x-1/2"
 					/>
 				)
@@ -54,6 +59,8 @@ const { heading, text, cta, backgroundImage, foregroundImage } = section;
 			<SiteNav ctx={ctx} showLogo={false} />
 
 			<div
+				data-hero-layer="content"
+				data-parallax="0.4"
 				class="absolute top-24 left-1/2 flex w-full max-w-[593px] -translate-x-1/2 flex-col items-center gap-6 px-6 text-center text-white sm:top-20"
 			>
 				<div class="flex flex-col items-center gap-2">
@@ -69,3 +76,50 @@ const { heading, text, cta, backgroundImage, foregroundImage } = section;
 		</div>
 	</div>
 </header>
+
+<script>
+	// Parallax: each layer drifts at its own speed while the hero scrolls away.
+	// Positive values lag behind the page (further away), negative ones move faster (closer).
+	// Layers centre themselves with `translate`, so the scroll offset goes in `transform`.
+	const hero = document.querySelector<HTMLElement>('[data-hero]');
+	const layers = [...(hero?.querySelectorAll<HTMLElement>('[data-parallax]') ?? [])].map((el) => ({
+		el,
+		speed: Number(el.dataset.parallax),
+		overhang: 0,
+	}));
+
+	if (hero && layers.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		// Layers moving up can only rise as far as they hang below the card, or their bottom edge shows
+		// The artwork scales with the card (one design pixel = width / 1392), and so does its motion
+		let scale = 1;
+		const measure = () => {
+			scale = Math.min(1, hero.offsetWidth / 1392);
+			layers.forEach((layer) => {
+				layer.overhang = Math.max(0, layer.el.offsetTop + layer.el.offsetHeight - hero.offsetHeight);
+			});
+		};
+		let frame = 0;
+		const update = () => {
+			// Nothing to move once the hero is off screen
+			const y = Math.min(window.scrollY, hero.offsetTop + hero.offsetHeight);
+			layers.forEach(({ el, speed, overhang }) => {
+				const offset = speed < 0 ? Math.max(y * speed * scale, -overhang) : y * speed * scale;
+				el.style.transform = `translate3d(0, ${offset}px, 0)`;
+			});
+		};
+		window.addEventListener('resize', () => {
+			measure();
+			update();
+		});
+		window.addEventListener(
+			'scroll',
+			() => {
+				cancelAnimationFrame(frame);
+				frame = requestAnimationFrame(update);
+			},
+			{ passive: true },
+		);
+		measure();
+		update();
+	}
+</script>

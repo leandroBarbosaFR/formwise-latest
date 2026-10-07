@@ -28,7 +28,7 @@ const SECTIONS = `sections[]{
 		"testimonials": testimonials[]{...${localizedItem}{_id, quote, name, role, rating}}
 	},
 	_type == "pricingSection" => {
-		"plans": plans[]{...${localizedItem}{_id, name, price, priceDetails, description, features, featured, badge, "cta": cta${BUTTON}}}
+		"plans": plans[]{...${localizedItem}{_id, name, monthlyPrice, monthlyPriceDetails, price, priceDetails, description, features, featured, badge, "cta": cta${BUTTON}}}
 	},
 	_type == "faqSection" => {
 		"faqs": faqs[]{...${localizedItem}{_id, question, topic, "answer": answer${RICH_TEXT}}}
@@ -141,6 +141,6 @@ export const LLMS_QUERY = defineQuery(`{
 	"posts": *[_type == "post" && language == $lang && defined(slug.current)] | order(publishedAt desc){
 		title, "slug": slug.current, excerpt, publishedAt
 	},
-	"plans": *[_type == "plan" && language == $lang]{name, price, priceDetails, description, features, featured} | order(featured desc),
+	"plans": *[_type == "plan" && language == $lang]{name, monthlyPrice, monthlyPriceDetails, price, priceDetails, description, features, featured} | order(featured desc),
 	"faqs": *[_type == "faq" && language == $lang]{question, answer}
 }`);

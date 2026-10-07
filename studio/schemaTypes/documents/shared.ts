@@ -47,15 +47,45 @@ export const planType = defineType({
   title: 'Pricing plan',
   type: 'document',
   icon: CreditCardIcon,
+  fieldsets: [
+    {name: 'monthly', title: 'Monthly billing'},
+    {name: 'yearly', title: 'Yearly billing'},
+  ],
   fields: [
     languageField,
     defineField({name: 'name', type: 'string', validation: (rule) => rule.required()}),
-    defineField({name: 'price', description: 'As displayed, e.g. "299 €"', type: 'string', validation: (rule) => rule.required()}),
+    // The site shows the monthly price by default; visitors can switch to yearly
     defineField({
-      name: 'priceDetails',
-      description: 'Small lines under the price',
+      name: 'monthlyPrice',
+      title: 'Monthly price',
+      description: 'As displayed, e.g. "29 €". Shown by default. Leave empty if this plan is only sold yearly.',
+      type: 'string',
+      fieldset: 'monthly',
+    }),
+    defineField({
+      name: 'monthlyPriceDetails',
+      title: 'Monthly price details',
+      description: 'Small lines under the monthly price, e.g. "per month, billed monthly"',
       type: 'array',
       of: [defineArrayMember({type: 'string'})],
+      fieldset: 'monthly',
+    }),
+    // Named `price` / `priceDetails` from before the monthly option existed
+    defineField({
+      name: 'price',
+      title: 'Yearly price',
+      description: 'As displayed, e.g. "299 €"',
+      type: 'string',
+      fieldset: 'yearly',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'priceDetails',
+      title: 'Yearly price details',
+      description: 'Small lines under the yearly price, e.g. "That’s 24,92 € per month, billed annually"',
+      type: 'array',
+      of: [defineArrayMember({type: 'string'})],
+      fieldset: 'yearly',
     }),
     defineField({name: 'description', type: 'string'}),
     defineField({name: 'features', type: 'array', of: [defineArrayMember({type: 'string'})]}),
@@ -63,5 +93,11 @@ export const planType = defineType({
     defineField({name: 'badge', description: 'e.g. "Most popular"', type: 'string', hidden: ({document}) => !document?.featured}),
     defineField({name: 'cta', title: 'Button', type: 'button'}),
   ],
-  preview: {select: {title: 'name', subtitle: 'price'}},
+  preview: {
+    select: {title: 'name', monthly: 'monthlyPrice', yearly: 'price'},
+    prepare: ({title, monthly, yearly}) => ({
+      title,
+      subtitle: [monthly && `${monthly} / month`, yearly && `${yearly} / year`].filter(Boolean).join(' · '),
+    }),
+  },
 })

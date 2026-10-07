@@ -42,6 +42,29 @@ export const pricingSection = defineSection({
       of: [defineArrayMember({type: 'reference', to: [{type: 'plan'}]})],
       validation: (rule) => rule.max(4),
     }),
+    // Monthly / yearly switch above the plans. It only appears when a plan has a monthly price.
+    defineField({
+      name: 'defaultBilling',
+      title: 'Billing shown first',
+      type: 'string',
+      options: {
+        list: [
+          {title: 'Monthly', value: 'monthly'},
+          {title: 'Yearly', value: 'yearly'},
+        ],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: 'monthly',
+    }),
+    defineField({name: 'monthlyLabel', title: 'Monthly toggle label', type: 'string', initialValue: 'Monthly'}),
+    defineField({name: 'yearlyLabel', title: 'Yearly toggle label', type: 'string', initialValue: 'Yearly'}),
+    defineField({
+      name: 'yearlyHint',
+      title: 'Yearly toggle hint',
+      description: 'Optional. Small tag next to the yearly option, e.g. "2 months free"',
+      type: 'string',
+    }),
   ],
 })
 
