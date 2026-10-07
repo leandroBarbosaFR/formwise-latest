@@ -6,34 +6,52 @@ interface Props {
 }
 const { section } = Astro.props;
 const words: string[] = section.words ?? [];
+
+// One scroll step per Figma frame: lift the eyebrow, bring in each word (the footnote rides up with
+// the last one), then settle the footnote. Steps for a missing eyebrow or footnote are skipped.
+// Plus one step of rest at the end, so the finished list stays before the page glides on.
+const STEP_SVH = 40;
+const steps = (section.eyebrow ? 1 : 0) + words.length + (section.footnote ? 1 : 0);
+const trackHeight = `calc(100svh + ${(steps + 1) * STEP_SVH}svh)`;
 ---
 
 <!--
 	Without JS (or with reduced motion) this renders the finished list.
-	The script adds `data-scrolly`: the section fills the screen, and when it reaches the top the
-	words rise in one by one (Figma "Scroll Prototype"), then the next scroll glides to the next section.
+	An inline script adds `data-scrolly` before the first paint (so the page height, and scroll
+	restoration on reload, are right from the start): the section becomes a tall scroll track with a pinned panel.
+	Scrolling steps through the Figma "Scroll Prototype" frames: each step springs the next word up
+	from below the fold, and once all the text is in, the page glides on to the next section.
 -->
-<section id={section.anchorId} class="group bg-brand" data-word-wheel>
-	<div
-		class="mx-auto flex min-h-[900px] max-w-[561px] flex-col items-center justify-center gap-16 px-6 py-24 text-center group-data-scrolly:h-svh group-data-scrolly:min-h-0 group-data-scrolly:overflow-clip group-data-scrolly:py-0"
-	>
-		{section.eyebrow && <p data-eyebrow class="type-body font-normal text-mist">{section.eyebrow}</p>}
-		<ul class="flex flex-col gap-14 text-[36px] leading-[1.2] tracking-[-0.02em] text-white sm:text-[48px]">
-			{words.map((word) => <li data-item class="will-change-transform">{word}</li>)}
-		</ul>
-		{section.footnote && <p data-footnote class="type-body font-normal text-mist">{section.footnote}</p>}
+<section id={section.anchorId} class="group bg-brand" data-word-wheel data-step-svh={STEP_SVH}>
+	<div data-track style={`--track-height: ${trackHeight}`} class="group-data-scrolly:h-(--track-height)">
+		<div
+			class="mx-auto flex min-h-[900px] max-w-[561px] flex-col items-center justify-center gap-16 px-6 py-24 text-center group-data-scrolly:sticky group-data-scrolly:top-0 group-data-scrolly:h-svh group-data-scrolly:min-h-0 group-data-scrolly:overflow-clip group-data-scrolly:py-0"
+		>
+			{section.eyebrow && <p data-eyebrow class="type-body font-normal text-mist">{section.eyebrow}</p>}
+			<ul class="flex flex-col gap-14 text-[36px] leading-[1.2] tracking-[-0.02em] text-white sm:text-[48px]">
+				{words.map((word) => <li data-item class="will-change-transform">{word}</li>)}
+			</ul>
+			{section.footnote && <p data-footnote class="type-body font-normal text-mist">{section.footnote}</p>}
+		</div>
 	</div>
 </section>
+<script is:inline>
+	(function (section) {
+		if (section.querySelector('[data-item]') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			section.dataset.scrolly = '';
+		}
+	})(document.currentScript.previousElementSibling);
+</script>
 
 <script>
-	import { easeInOut, springAnimate, wait } from '../../lib/motion';
+	import { easeInOut, springAnimate } from '../../lib/motion';
 
-	// Figma "Scroll Prototype": each step is Smart animate after a 200ms delay with this spring,
-	// and once all the text is in, the page moves on with Ease in and out over 1600ms.
-	const STEP_DELAY = 200;
+	// Figma "Scroll Prototype": each step is Smart animate with this spring; once all the text is in,
+	// the page moves on to the next section with Ease in and out over 1600ms
 	const SPRING = { mass: 1, stiffness: 180, damping: 30 };
-	const EXIT = { delay: 200, duration: 1600 };
+	const EXIT_MS = 1600;
 	// Design pixels on the 900px-tall frame
+	const ARTBOARD_HEIGHT = 900;
 	const EYEBROW_LIFT = 48; // "Control" starts at 159 and settles at 111
 	const BELOW_FOLD = 45; // waiting words sit just under the fold (945 on a 900 frame)
 	const FOOTNOTE_OVERSHOOT = 56; // the footnote lands 56 low with the last word, then settles
@@ -42,124 +60,140 @@ const words: string[] = section.words ?? [];
 	const SCROLL_KEYS = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' ']);
 
 	function setup(section: HTMLElement) {
+		const track = section.querySelector<HTMLElement>('[data-track]')!;
+		const panel = track.firstElementChild as HTMLElement;
 		const eyebrow = section.querySelector<HTMLElement>('[data-eyebrow]');
 		const footnote = section.querySelector<HTMLElement>('[data-footnote]');
 		const items = [...section.querySelectorAll<HTMLElement>('[data-item]')];
-		if (items.length === 0) return;
+		const count = items.length;
+		// Scroll distance that advances one step, in viewport heights (the track height is set in the markup)
+		const stepSvh = Number(section.dataset.stepSvh);
 
-		section.dataset.scrolly = '';
-		// Already scrolled past (e.g. a reload halfway down the page): keep the finished list
-		if (section.getBoundingClientRect().top < 0) return;
+		// Steps as in the markup: eyebrow, each word (footnote rides with the last), footnote settles
+		const firstWord = eyebrow ? 2 : 1;
+		const lastWord = firstWord + count - 1;
+		const steps = lastWord + (footnote ? 1 : 0);
 
-		// Words wait just under the fold. Measured from the top of the section with offsetTop, which
-		// ignores transforms (the section and the words share the page as offset parent).
-		const measureRise = () => window.innerHeight + BELOW_FOLD - (items[0].offsetTop - section.offsetTop);
-		let rise = measureRise();
-		const step = (el: HTMLElement | null, from: number, to: number) =>
-			el && springAnimate(el, SPRING, (p) => ({ transform: `translate3d(0, ${from + (to - from) * p}px, 0)` }));
-		const park = (el: HTMLElement | null, y: number) => el?.animate([{ transform: `translate3d(0, ${y}px, 0)` }], { fill: 'forwards' });
-		const parkAll = () => {
-			park(eyebrow, EYEBROW_LIFT);
-			items.forEach((item) => park(item, rise));
-			park(footnote, rise);
-		};
-		parkAll();
-
-		// While the words come in (and while gliding out) the page doesn't scroll
-		let locked = false;
-		const block = (event: Event) => {
-			if (locked) event.preventDefault();
-		};
-		const blockKeys = (event: KeyboardEvent) => {
-			if (locked && SCROLL_KEYS.has(event.key)) event.preventDefault();
-		};
-		window.addEventListener('wheel', block, { passive: false });
-		window.addEventListener('touchmove', block, { passive: false });
-		window.addEventListener('keydown', blockKeys);
-		const lock = (on: boolean) => {
-			locked = on;
-			document.documentElement.style.overflow = on ? 'hidden' : '';
+		// Sizes come from the pinned panel (100svh), which doesn't change when mobile browser bars
+		// show or hide, unlike the window height
+		let height = 0;
+		let rise = 0;
+		const measure = () => {
+			height = panel.offsetHeight;
+			// Words wait just under the fold. offsetTop is relative to the sticky panel and ignores transforms.
+			rise = height + BELOW_FOLD - items[0].offsetTop;
 		};
 
-		async function play() {
-			lock(true);
-			// Pin the section exactly to the top, wherever the scroll landed
-			window.scrollTo(0, window.scrollY + section.getBoundingClientRect().top);
-			// Fonts or a resize may have moved things since the page loaded
-			rise = measureRise();
-			parkAll();
-
-			await wait(STEP_DELAY);
-			await step(eyebrow, EYEBROW_LIFT, 0);
-			for (const [i, item] of items.entries()) {
-				await wait(STEP_DELAY);
-				const last = i === items.length - 1;
-				// The footnote rides up with the last word
-				await Promise.all([step(item, rise, 0), last && step(footnote, rise, FOOTNOTE_OVERSHOOT)]);
-			}
-			await wait(STEP_DELAY);
-			await step(footnote, FOOTNOTE_OVERSHOOT, 0);
-
-			lock(false);
-			awaitExit();
-		}
-
-		// Once all the text is in, the next scroll down glides to the next section
-		function awaitExit() {
-			let touchY = 0;
-			const onTouchStart = (event: TouchEvent) => (touchY = event.touches[0].clientY);
-			const intent = (event: Event) => {
-				const down =
-					(event instanceof WheelEvent && event.deltaY > 0) ||
-					(event instanceof TouchEvent && touchY - event.touches[0].clientY > 10) ||
-					(event instanceof KeyboardEvent && ['ArrowDown', 'PageDown', ' '].includes(event.key));
-				// Only from the pinned position; anywhere else the page scrolls normally
-				if (!down || Math.abs(section.getBoundingClientRect().top) > 2) return;
-				event.preventDefault();
-				window.removeEventListener('wheel', intent);
-				window.removeEventListener('touchmove', intent);
-				window.removeEventListener('keydown', intent);
-				window.removeEventListener('touchstart', onTouchStart);
-				exit();
-			};
-			window.addEventListener('touchstart', onTouchStart, { passive: true });
-			window.addEventListener('wheel', intent, { passive: false });
-			window.addEventListener('touchmove', intent, { passive: false });
-			window.addEventListener('keydown', intent);
-		}
-
-		async function exit() {
-			lock(true);
-			await wait(EXIT.delay);
-			const start = window.scrollY;
-			const distance = (EXIT_DISTANCE / 900) * window.innerHeight;
-			const t0 = performance.now();
-			await new Promise<void>((resolve) => {
-				const frame = (now: number) => {
-					const t = Math.min((now - t0) / EXIT.duration, 1);
-					window.scrollTo(0, start + distance * easeInOut(t));
-					if (t < 1) requestAnimationFrame(frame);
-					else resolve();
-				};
-				requestAnimationFrame(frame);
+		// Where each element sits at a given step
+		const targets = (step: number): [HTMLElement | null, number][] => [
+			[eyebrow, step >= 1 ? 0 : EYEBROW_LIFT],
+			...items.map((item, i): [HTMLElement, number] => [item, step >= firstWord + i ? 0 : rise]),
+			[footnote, step >= lastWord + 1 ? 0 : step >= lastWord ? FOOTNOTE_OVERSHOOT : rise],
+		];
+		const currentY = (el: HTMLElement) => new DOMMatrix(getComputedStyle(el).transform).m42;
+		const place = (step: number) =>
+			targets(step).forEach(([el, y]) => {
+				if (!el) return;
+				el.getAnimations().forEach((animation) => animation.cancel());
+				el.style.transform = `translate3d(0, ${y}px, 0)`;
 			});
-			lock(false);
+		// Springs every element that changed from wherever it is now, so fast scrolling or
+		// reversing mid-way stays smooth
+		const animateTo = (step: number) =>
+			targets(step).forEach(([el, y]) => {
+				if (!el) return;
+				const from = currentY(el);
+				if (Math.abs(from - y) < 0.5) return;
+				el.getAnimations().forEach((animation) => animation.cancel());
+				el.style.transform = `translate3d(0, ${y}px, 0)`;
+				springAnimate(el, SPRING, (p) => ({ transform: `translate3d(0, ${from + (y - from) * p}px, 0)` }))
+					// Cancelled by a newer step
+					.catch(() => {});
+			});
+
+		// How far the page has scrolled into the track, and where the panel unpins
+		const scrolled = () => -track.getBoundingClientRect().top;
+		const unpinAt = () => track.offsetHeight - height;
+		// A pixel of tolerance: scroll positions can be fractional (e.g. 0.3px into the track at the start)
+		const stepAt = () => Math.min(Math.max(Math.ceil((scrolled() - 1) / ((stepSvh / 100) * height)), 0), steps);
+
+		// Once all the text is in, scrolling past the end of the track glides to the next section.
+		// Input is held while it glides so the wheel or a swipe doesn't fight it.
+		let gliding = false;
+		const hold = (event: Event) => {
+			if (gliding) event.preventDefault();
+		};
+		window.addEventListener('wheel', hold, { passive: false });
+		window.addEventListener('touchmove', hold, { passive: false });
+		window.addEventListener('keydown', (event) => {
+			if (gliding && SCROLL_KEYS.has(event.key)) event.preventDefault();
+		});
+
+		function glide() {
+			const start = window.scrollY;
+			// Frame 9: the section has moved EXIT_DISTANCE up from where the panel unpins
+			const end = window.scrollY - scrolled() + unpinAt() + (EXIT_DISTANCE / ARTBOARD_HEIGHT) * height;
+			// Momentum already carried the page past it: nothing to do
+			if (end <= start) return;
+			gliding = true;
+			document.documentElement.style.overflow = 'hidden';
+			const t0 = performance.now();
+			const frame = (now: number) => {
+				const t = Math.min((now - t0) / EXIT_MS, 1);
+				window.scrollTo(0, start + (end - start) * easeInOut(t));
+				if (t < 1) return void requestAnimationFrame(frame);
+				gliding = false;
+				document.documentElement.style.overflow = '';
+			};
+			requestAnimationFrame(frame);
 		}
 
-		// Starts when the section reaches the top of the screen while scrolling down
+		let step = -1;
 		let lastY = window.scrollY;
-		const onScroll = () => {
+		let armed = true;
+		const update = () => {
+			const complete = step === steps;
+			const next = stepAt();
+			if (next !== step) {
+				// First run (page load, or a reload halfway down) jumps straight to the right state
+				if (step === -1) place(next);
+				else animateTo(next);
+				step = next;
+			}
 			const down = window.scrollY > lastY;
 			lastY = window.scrollY;
-			if (down && section.getBoundingClientRect().top <= 0) {
-				window.removeEventListener('scroll', onScroll);
-				play();
+			const pastEnd = scrolled() >= unpinAt() - 1;
+			// Re-arm once the visitor is back inside the track
+			if (!pastEnd) armed = true;
+			// Only when all the text was already in, not when one fast scroll jumped through the steps
+			if (armed && pastEnd && down && complete && !gliding) {
+				armed = false;
+				glide();
 			}
 		};
-		window.addEventListener('scroll', onScroll, { passive: true });
+
+		let frame = 0;
+		const schedule = () => {
+			cancelAnimationFrame(frame);
+			frame = requestAnimationFrame(update);
+		};
+
+		measure();
+		update();
+		window.addEventListener('scroll', schedule, { passive: true });
+		// The panel only changes size when the layout really changes (width, rotation, fonts)
+		new ResizeObserver(() => {
+			const before = height;
+			measure();
+			if (height !== before) place(step);
+		}).observe(panel);
+		// Word positions change once the brand font swaps in
+		document.fonts.ready.then(() => {
+			measure();
+			place(step);
+		});
 	}
 
-	if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-		document.querySelectorAll<HTMLElement>('[data-word-wheel]').forEach(setup);
-	}
+	// The inline script only turns on the scroll track when there are words and motion is allowed
+	document.querySelectorAll<HTMLElement>('[data-word-wheel][data-scrolly]').forEach(setup);
 </script>

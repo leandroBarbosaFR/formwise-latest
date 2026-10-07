@@ -2,6 +2,11 @@
 // Splash played over the home hero on the first visit of a session (Figma "Intro Prototype"):
 // the camera pulls out of the logo's arch, a white sheet slides up over the logo,
 // then the hero card fades in while the giant wordmark rises. Delays and spring match the prototype.
+import logoSvg from '../../../public/figma/intro-logo.svg?raw';
+
+// The logo's shapes, drawn inline so the zoom can move the "camera" (the viewBox) over them:
+// the browser only ever draws one screen of pixels, sharp at any zoom level
+const logoShapes = logoSvg.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
 ---
 
 <script is:inline>
@@ -17,7 +22,9 @@
 </script>
 
 <div data-intro-overlay aria-hidden="true" class="fixed inset-0 z-50 hidden overflow-clip bg-[#0349aa]">
-	<img src="/figma/intro-logo.svg" alt="" width="264.025" height="39.6986" data-intro-logo class="absolute top-0 left-0 h-auto max-w-none" />
+	<svg data-intro-logo viewBox="0 0 264.025 39.6986" preserveAspectRatio="none" fill="none" class="absolute inset-0 size-full">
+		<Fragment set:html={logoShapes} />
+	</svg>
 	<div data-intro-sheet class="absolute inset-0 translate-y-[calc(100%+20px)] bg-white"></div>
 </div>
 
@@ -35,7 +42,7 @@
 </style>
 
 <script>
-	import { lerp, springAnimate, wait } from '../../lib/motion';
+	import { lerp, springAnimate, springAt, wait } from '../../lib/motion';
 
 	const root = document.documentElement;
 	const overlay = document.querySelector<HTMLElement>('[data-intro-overlay]');
@@ -51,6 +58,7 @@
 	// The hero wordmark sits 136 design pixels lower in frame 3 and rises in frame 4
 	const WORDMARK_RISE = 136;
 
+	const SPRING_CURVE = springAt(SPRING);
 	const springStep = (el: Element, frame: (p: number) => Keyframe) => springAnimate(el, SPRING, frame);
 	const mix = (from: number[], to: number[], p: number) => `rgb(${from.map((c, i) => Math.round(lerp(c, to[i], p))).join(' ')})`;
 
@@ -66,27 +74,41 @@
 		const hero = document.querySelector<HTMLElement>('[data-hero]');
 
 		// Frame 1 → 2: pull out of the arch to the centred logo, blue #0349aa → #023d9d.
-		// Frame 1 is scaled up on screens larger than the artboard so the arch still fills them.
-		// The logo is resized (not scaled) so the SVG stays sharp at every step.
-		const cx = innerWidth / 2;
-		const cy = innerHeight / 2;
-		const k = Math.max(1, innerWidth / ARTBOARD.width, innerHeight / ARTBOARD.height);
-		const from = {
-			x: cx + (ZOOMED.left - ARTBOARD.width / 2) * k,
-			y: cy + (ZOOMED.top - ARTBOARD.height / 2) * k,
-			width: ZOOMED.width * k,
+		// The zoom moves the SVG viewBox (a camera over the logo), so each frame only draws one screen
+		// of pixels. Frame 1 is scaled up on screens larger than the artboard so the arch still fills them.
+		const W = innerWidth;
+		const H = innerHeight;
+		const k = Math.max(1, W / ARTBOARD.width, H / ARTBOARD.height);
+		// Pixels per logo unit at the start (frame 1) and at the end (frame 2, actual size)
+		const startScale = (ZOOMED.width * k) / LOGO.width;
+		// The logo point at the centre of the screen in frame 1 (inside the arch), in logo units
+		const anchor = {
+			x: (W / 2 - (W / 2 + (ZOOMED.left - ARTBOARD.width / 2) * k)) / startScale,
+			y: (H / 2 - (H / 2 + (ZOOMED.top - ARTBOARD.height / 2) * k)) / startScale,
 		};
-		const to = { x: cx - LOGO.width / 2, y: cy - LOGO.height / 2, width: LOGO.width };
-		const zoomAt = (p: number): Keyframe => ({
-			width: `${lerp(from.width, to.width, p)}px`,
-			transform: `translate(${lerp(from.x, to.x, p)}px, ${lerp(from.y, to.y, p)}px)`,
-		});
-		logo.animate([zoomAt(0)], { fill: 'forwards' });
+		// Where that point sits on screen once the logo is centred
+		const anchorEnd = { x: (W - LOGO.width) / 2 + anchor.x, y: (H - LOGO.height) / 2 + anchor.y };
+		const showZoom = (p: number) => {
+			// Zoom on a log scale so it reads as an even pull-out with an invisible tail;
+			// the anchor glides from the screen centre to its place in the centred logo
+			const scale = startScale ** (1 - p);
+			const ax = lerp(W / 2, anchorEnd.x, p);
+			const ay = lerp(H / 2, anchorEnd.y, p);
+			logo.setAttribute('viewBox', `${anchor.x - ax / scale} ${anchor.y - ay / scale} ${W / scale} ${H / scale}`);
+			overlay.style.backgroundColor = mix([3, 73, 170], [2, 61, 157], p);
+		};
+		showZoom(0);
 		await wait(DELAY.zoom);
-		await Promise.all([
-			springStep(logo, zoomAt),
-			springStep(overlay, (p) => ({ backgroundColor: mix([3, 73, 170], [2, 61, 157], p) })),
-		]);
+		await new Promise<void>((resolve) => {
+			const t0 = performance.now();
+			const frame = (now: number) => {
+				const t = now - t0;
+				showZoom(SPRING_CURVE.at(t));
+				if (t < SPRING_CURVE.duration) requestAnimationFrame(frame);
+				else resolve();
+			};
+			requestAnimationFrame(frame);
+		});
 		if (!hero) return;
 
 		// Frame 2 → 3: the white page slides up over the logo

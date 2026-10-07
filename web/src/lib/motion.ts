@@ -25,6 +25,18 @@ export function spring({ mass, stiffness, damping }: SpringConfig, samples = 90)
 	return { duration, progress };
 }
 
+// The same spring as a function of elapsed time, for motion driven frame by frame from JS
+export function springAt(config: SpringConfig) {
+	const { duration, progress } = spring(config);
+	const last = progress.length - 1;
+	const at = (ms: number) => {
+		const i = Math.min(Math.max(ms / duration, 0), 1) * last;
+		const lo = Math.floor(i);
+		return lerp(progress[lo], progress[Math.min(lo + 1, last)], i - lo);
+	};
+	return { duration, at };
+}
+
 // One Smart animate step with a spring: `frame` turns progress (0 → 1) into a keyframe
 export function springAnimate(el: Element, config: SpringConfig, frame: (p: number) => Keyframe) {
 	const { duration, progress } = spring(config);
