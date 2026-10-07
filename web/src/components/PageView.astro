@@ -3,6 +3,7 @@ import Layout from '../layouts/main.astro';
 import type { SiteContext } from '../lib/data';
 import { pageGraph } from '../lib/seo';
 import type { Page } from '../lib/types';
+import Intro from './sections/Intro.astro';
 import PageHeader from './sections/PageHeader.astro';
 import SectionRenderer from './sections/SectionRenderer.astro';
 
@@ -20,9 +21,12 @@ const HEADER_TYPES = ['heroSection', 'pageHeaderSection'];
 const [first, ...rest] = sections;
 const hasHeader = first && HEADER_TYPES.includes(first._type);
 const body = hasHeader ? rest : sections;
+// The splash only plays on the home page, where it ends on the hero
+const showIntro = kind === 'home' && first?._type === 'heroSection';
 ---
 
 <Layout ctx={ctx} title={page.title} seo={page.seo} jsonLd={jsonLd}>
+	{showIntro && <Intro />}
 	{
 		hasHeader ? (
 			<SectionRenderer sections={[first]} ctx={ctx} />

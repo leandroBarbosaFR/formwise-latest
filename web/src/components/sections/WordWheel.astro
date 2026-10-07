@@ -9,24 +9,20 @@ const words: string[] = section.words ?? [];
 ---
 
 <!--
-	Without JS (or with reduced motion) this renders a static list.
+	Without JS (or with reduced motion) this renders the finished list.
 	The script adds `data-scrolly`: the section becomes a tall scroll track with a
-	pinned panel, and the words turn like a looping wheel through the centre slot.
+	pinned panel, and the words rise from below the fold one by one, stacking into the list.
 -->
 <section id={section.anchorId} class="group bg-brand" data-word-wheel>
 	<div data-track>
 		<div
-			class="mx-auto flex min-h-[900px] max-w-[561px] flex-col items-center justify-center gap-16 px-6 py-24 text-center group-data-scrolly:sticky group-data-scrolly:top-0 group-data-scrolly:h-svh group-data-scrolly:min-h-0 group-data-scrolly:py-0"
+			class="mx-auto flex min-h-[900px] max-w-[561px] flex-col items-center justify-center gap-16 px-6 py-24 text-center group-data-scrolly:sticky group-data-scrolly:top-0 group-data-scrolly:h-svh group-data-scrolly:min-h-0 group-data-scrolly:overflow-clip group-data-scrolly:py-0"
 		>
-			{section.eyebrow && <p class="type-body font-normal text-mist">{section.eyebrow}</p>}
-			<div
-				class="relative w-full group-data-scrolly:overflow-hidden group-data-scrolly:[mask-image:linear-gradient(transparent,#000_18%,#000_82%,transparent)]"
-			>
-				<ul class="relative flex flex-col gap-14 text-[36px] leading-[1.2] tracking-[-0.02em] text-white sm:text-[48px]">
-					{words.map((word) => <li data-item class="will-change-transform">{word}</li>)}
-				</ul>
-			</div>
-			{section.footnote && <p class="type-body font-normal text-mist">{section.footnote}</p>}
+			{section.eyebrow && <p data-eyebrow class="type-body font-normal text-mist">{section.eyebrow}</p>}
+			<ul class="flex flex-col gap-14 text-[36px] leading-[1.2] tracking-[-0.02em] text-white sm:text-[48px]">
+				{words.map((word) => <li data-item class="will-change-transform">{word}</li>)}
+			</ul>
+			{section.footnote && <p data-footnote class="type-body font-normal text-mist">{section.footnote}</p>}
 		</div>
 	</div>
 </section>
@@ -34,52 +30,57 @@ const words: string[] = section.words ?? [];
 <script>
 	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-	// Scroll distance spent on each word, in viewport heights
+	// Scroll distance spent on each step, in viewport heights
 	const STEP_SVH = 40;
-	// Opacity of the words next to the centre slot and beyond
-	const DIM = 0.25;
+	// The eyebrow starts 48 design pixels lower and lifts as the section pins
+	const EYEBROW_LIFT = 48;
+	// The footnote lands 56 design pixels low with the last word, then settles
+	const FOOTNOTE_OVERSHOOT = 56;
+	// Words land at the top of the fold plus this, as in the design (945px on a 900px frame)
+	const BELOW_FOLD = 45;
+	// Steps of stillness at the end, so the finished list stays a moment before scrolling away
+	const HOLD = 0.75;
 
-	// Smoothstep: each word settles in the centre before the next one moves in
+	// Smoothstep: each word settles before the next one moves in
 	const ease = (t: number) => t * t * (3 - 2 * t);
+	const clamp = (t: number) => Math.min(Math.max(t, 0), 1);
 
 	function setup(section: HTMLElement) {
 		const track = section.querySelector<HTMLElement>('[data-track]')!;
+		const eyebrow = section.querySelector<HTMLElement>('[data-eyebrow]');
+		const footnote = section.querySelector<HTMLElement>('[data-footnote]');
 		const items = [...section.querySelectorAll<HTMLElement>('[data-item]')];
 		const count = items.length;
-		if (count < 2) return;
-		// Index of the slot in the middle of the window
-		const middle = (count - 1) / 2;
-		// Wrap a slot offset into [-count/2, count/2) so the list loops around
-		const wrap = (offset: number) => ((((offset + count / 2) % count) + count) % count) - count / 2;
+		if (count === 0) return;
 
+		// Step 0 lifts the eyebrow, steps 1…count bring in the words, the last one settles the footnote
+		const steps = count + 2;
 		section.dataset.scrolly = '';
-		// One full turn of the wheel, so the section ends on the word it started with
-		track.style.height = `calc(100svh + ${count * STEP_SVH}svh)`;
+		track.style.height = `calc(100svh + ${(steps + HOLD) * STEP_SVH}svh)`;
 
-		let pitch = 0;
+		// How far the words travel: from just below the fold to their place in the list
+		let rise = 0;
 		const measure = () => {
-			pitch = items[1].offsetTop - items[0].offsetTop;
+			// offsetTop is relative to the sticky panel and ignores transforms
+			rise = window.innerHeight + BELOW_FOLD - items[0].offsetTop;
 		};
 
 		const update = () => {
 			const scrollable = track.offsetHeight - window.innerHeight;
-			const progress = Math.min(Math.max(-track.getBoundingClientRect().top / scrollable, 0), 1);
-			const position = progress * count;
-			const step = Math.floor(position);
-			const active = step + ease(position - step);
+			const position = clamp(-track.getBoundingClientRect().top / scrollable) * (steps + HOLD);
+			const stepProgress = (step: number) => ease(clamp(position - step));
 
+			if (eyebrow) eyebrow.style.transform = `translate3d(0, ${(1 - stepProgress(0)) * EYEBROW_LIFT}px, 0)`;
 			items.forEach((item, i) => {
-				// Where this word should sit relative to the centre slot
-				const offset = wrap(i - active);
-				const distance = Math.abs(offset);
-				item.style.transform = `translate3d(0, ${(offset - (i - middle)) * pitch}px, 0)`;
-				// Words crossing the wrap point (past the outer slots) fade out completely
-				const opacity =
-					distance <= middle
-						? Math.max(DIM, 1 - distance * (1 - DIM))
-						: DIM * Math.max(0, 1 - (distance - middle) * 2);
-				item.style.opacity = String(opacity);
+				item.style.transform = `translate3d(0, ${(1 - stepProgress(i + 1)) * rise}px, 0)`;
 			});
+			if (footnote) {
+				// Rides up with the last word, then settles into place
+				const arrive = stepProgress(count);
+				const settle = stepProgress(count + 1);
+				const offset = (1 - arrive) * rise + arrive * (1 - settle) * FOOTNOTE_OVERSHOOT;
+				footnote.style.transform = `translate3d(0, ${offset}px, 0)`;
+			}
 		};
 
 		let frame = 0;

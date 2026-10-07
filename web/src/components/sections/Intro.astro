@@ -1,0 +1,124 @@
+---
+// Splash played over the home hero on the first visit of a session (Figma "Intro Prototype"):
+// the camera pulls out of the logo's arch, a white sheet slides up over the logo,
+// then the hero fades in with the giant wordmark rising into place.
+---
+
+<script is:inline>
+	// Runs before the first paint so the hero never flashes before the splash.
+	// Without JS, with reduced motion, or after the first visit, nothing happens.
+	try {
+		if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !sessionStorage.getItem('formwise-intro')) {
+			document.documentElement.dataset.intro = '';
+			// If the animation script never runs, don't leave the page covered
+			window.__introFailsafe = setTimeout(() => delete document.documentElement.dataset.intro, 8000);
+		}
+	} catch {}
+</script>
+
+<div data-intro-overlay aria-hidden="true" class="fixed inset-0 z-50 hidden overflow-clip bg-[#0349aa]">
+	<img src="/figma/intro-logo.svg" alt="" width="264.025" height="39.6986" data-intro-logo class="absolute top-0 left-0 h-auto max-w-none" />
+	<div data-intro-sheet class="absolute inset-0 translate-y-[calc(100%+20px)] bg-white"></div>
+</div>
+
+<style is:global>
+	html[data-intro] {
+		overflow: hidden;
+	}
+	html[data-intro] [data-intro-overlay] {
+		display: block;
+	}
+	/* Hero starts hidden with the wordmark 136 design pixels lower, as in the third frame */
+	html[data-intro] [data-hero] {
+		opacity: 0;
+	}
+	html[data-intro] [data-hero-wordmark] {
+		transform: translateY(calc(136 * var(--u)));
+	}
+</style>
+
+<script>
+	const root = document.documentElement;
+	const overlay = document.querySelector<HTMLElement>('[data-intro-overlay]');
+
+	// Design artboard and logo geometry from Figma
+	const ARTBOARD = { width: 1440, height: 900 };
+	const LOGO = { width: 264.025, height: 39.6986 };
+	// First frame: the logo is 100x bigger and the screen centre sits inside the arch of the symbol
+	const START_SCALE = 26523.168 / LOGO.width;
+	const ARCH = { x: (720 + 1285) / 26523.168, y: (450 + 2106) / 3988 };
+
+	const EASE = 'cubic-bezier(0.76, 0, 0.24, 1)';
+	const EASE_OUT = 'cubic-bezier(0.22, 1, 0.36, 1)';
+	const easeInOutQuart = (t: number) => (t < 0.5 ? 8 * t ** 4 : 1 - (-2 * t + 2) ** 4 / 2);
+	const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+	async function play(overlay: HTMLElement) {
+		clearTimeout((window as any).__introFailsafe);
+		try {
+			sessionStorage.setItem('formwise-intro', '1');
+		} catch {}
+		window.scrollTo(0, 0);
+
+		const logo = overlay.querySelector<HTMLElement>('[data-intro-logo]')!;
+		const sheet = overlay.querySelector<HTMLElement>('[data-intro-sheet]')!;
+		const hero = document.querySelector<HTMLElement>('[data-hero]');
+		const wordmark = document.querySelector<HTMLElement>('[data-hero-wordmark]');
+
+		// Zoom out of the arch. Scale is interpolated on a log curve so the pull-out feels constant,
+		// and the logo is resized (not scaled) so the SVG stays sharp at every step.
+		const cx = innerWidth / 2;
+		const cy = innerHeight / 2;
+		const startScale = START_SCALE * Math.max(1, innerWidth / ARTBOARD.width, innerHeight / ARTBOARD.height);
+		// Where the arch point ends up once the logo is centred
+		const end = { x: cx + (ARCH.x - 0.5) * LOGO.width, y: cy + (ARCH.y - 0.5) * LOGO.height };
+		const frames = Array.from({ length: 61 }, (_, i) => {
+			const e = easeInOutQuart(i / 60);
+			const width = LOGO.width * startScale ** (1 - e);
+			const height = (width / LOGO.width) * LOGO.height;
+			const x = cx + (end.x - cx) * e - ARCH.x * width;
+			const y = cy + (end.y - cy) * e - ARCH.y * height;
+			return { width: `${width}px`, transform: `translate(${x}px, ${y}px)` };
+		});
+		const ZOOM_MS = 1600;
+		logo.animate(frames, { duration: ZOOM_MS, delay: 200, fill: 'both' });
+		await overlay.animate([{ backgroundColor: '#0349aa' }, { backgroundColor: '#023d9d' }], {
+			duration: ZOOM_MS,
+			delay: 200,
+			easing: EASE,
+			fill: 'forwards',
+		}).finished;
+
+		// White sheet slides up over the logo
+		await wait(300);
+		await sheet.animate([{ transform: 'translateY(calc(100% + 20px))' }, { transform: 'none' }], {
+			duration: 900,
+			easing: EASE,
+			fill: 'forwards',
+		}).finished;
+
+		// The page underneath is white with the hero hidden, so the overlay can go
+		overlay.remove();
+		const reveal = [
+			hero?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 800, easing: 'ease-out', fill: 'forwards' }).finished,
+			wordmark?.animate([{ transform: getComputedStyle(wordmark).transform }, { transform: 'none' }], {
+				duration: 1200,
+				easing: EASE_OUT,
+				fill: 'forwards',
+			}).finished,
+		];
+		await Promise.all(reveal);
+		delete root.dataset.intro;
+		hero?.getAnimations().forEach((animation) => animation.cancel());
+		wordmark?.getAnimations().forEach((animation) => animation.cancel());
+	}
+
+	if (overlay && 'intro' in root.dataset) {
+		play(overlay).catch(() => {
+			overlay.remove();
+			delete root.dataset.intro;
+		});
+	} else {
+		overlay?.remove();
+	}
+</script>

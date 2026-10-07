@@ -17,6 +17,7 @@ const { heading, text, cta, backgroundImage, foregroundImage } = section;
 	<div class="@container">
 		<!-- --u is one design pixel of the 1392px-wide artboard, so the artwork scales as one piece -->
 		<div
+			data-hero
 			class="relative h-[max(620px,calc(852*var(--u)))] overflow-clip rounded-xl bg-brand [--u:calc(100cqw/1392)]"
 		>
 			{
@@ -36,6 +37,7 @@ const { heading, text, cta, backgroundImage, foregroundImage } = section;
 				alt={ctx.layout.settings?.siteName ?? 'Formwise'}
 				width="1344"
 				height="259.881"
+				data-hero-wordmark
 				class="absolute bottom-[calc(317.67*var(--u))] left-1/2 h-auto w-[calc(1344*var(--u))] max-w-none -translate-x-1/2"
 			/>
 
