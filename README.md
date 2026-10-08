@@ -13,7 +13,7 @@ cd studio && npm run dev      # Studio on http://localhost:3333
 cd web && npm run dev         # Website on http://localhost:4321
 ```
 
-The website is static: publish in Sanity, then rebuild (`npm run build` in `web/`) or trigger your host's deploy hook.
+Pages are rendered on Vercel when visited and cached for 60 seconds (ISR). Anything published in Sanity, including translations, appears on the website within about a minute: no rebuild or deploy needed. Code changes still deploy as usual when pushed.
 
 ## Content structure
 

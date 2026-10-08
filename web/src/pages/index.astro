@@ -2,7 +2,7 @@
 import { getLanguages } from '../lib/data';
 import { BASE_LANGUAGE } from '../lib/languages';
 
-// Static hosting has no server to read Accept-Language, so the browser picks the language
+// This page is cached once for every visitor, so the browser (not the server) picks the language
 const languages = await getLanguages();
 ---
 

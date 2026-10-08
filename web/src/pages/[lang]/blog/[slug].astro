@@ -6,21 +6,19 @@ import PostCard from '../../../components/sections/PostCard.astro';
 import Layout from '../../../layouts/main.astro';
 import { getLanguages, getSiteContext } from '../../../lib/data';
 import { alternatesFor, blogPath, fillTemplate } from '../../../lib/links';
-import { POST_PATHS_QUERY, POST_QUERY } from '../../../lib/queries';
+import { POST_QUERY } from '../../../lib/queries';
 import { minutesToRead } from '../../../lib/richText';
 import { hasImage, imageDimensions, urlFor } from '../../../lib/sanity';
 import { postGraph } from '../../../lib/seo';
 import type { Post } from '../../../lib/types';
 
-export async function getStaticPaths() {
-	const languages = await getLanguages();
-	const posts = await sanityClient.fetch<{ language: string; slug: string }[]>(POST_PATHS_QUERY, { languages });
-	return posts.map((post) => ({ params: { lang: post.language, slug: post.slug } }));
-}
-
-const { lang, slug } = Astro.params;
-const post = await sanityClient.fetch<Post>(POST_QUERY, { lang, slug });
-const ctx = await getSiteContext(lang, alternatesFor(post.translations, await getLanguages(), 'post'));
+// Rendered when visited (and cached), so anything published in Sanity shows up without a rebuild
+const lang = Astro.params.lang!;
+const slug = Astro.params.slug!;
+const languages = await getLanguages();
+const post = languages.includes(lang) ? await sanityClient.fetch<Post | null>(POST_QUERY, { lang, slug }) : null;
+if (!post) return Astro.rewrite('/404');
+const ctx = await getSiteContext(lang, alternatesFor(post.translations, languages, 'post'));
 const strings = ctx.layout.settings?.strings ?? {};
 
 const date = new Intl.DateTimeFormat(lang, { dateStyle: 'long' }).format(new Date(post.publishedAt));

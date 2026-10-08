@@ -97,10 +97,6 @@ export const PAGE_BY_SLUG_QUERY = defineQuery(
 	`*[_type == "page" && language == $lang && slug.current == $slug][0]{${PAGE_FIELDS}}`,
 );
 
-export const PAGE_PATHS_QUERY = defineQuery(
-	`*[_type == "page" && language in $languages && defined(slug.current)]{_id, language, "slug": slug.current}`,
-);
-
 const POST_CARD = `_id, title, "slug": slug.current, excerpt, coverImage, publishedAt,
 	"author": ${localizedField('author')}{name, role, image},
 	"categories": categories[]{...${localizedItem}{_id, title, "slug": slug.current}},
@@ -120,10 +116,6 @@ export const POST_QUERY = defineQuery(`*[_type == "post" && language == $lang &&
 	${TRANSLATIONS},
 	"related": *[_type == "post" && language == $lang && slug.current != $slug] | order(publishedAt desc)[0...3]{${POST_CARD}}
 }`);
-
-export const POST_PATHS_QUERY = defineQuery(
-	`*[_type == "post" && language in $languages && defined(slug.current)]{language, "slug": slug.current}`,
-);
 
 // Everything that belongs in the sitemap, with its translation group to link language versions
 export const SITEMAP_QUERY = defineQuery(

@@ -3,29 +3,18 @@ import { sanityClient } from 'sanity:client';
 import PageView from '../../components/PageView.astro';
 import { getLanguages, getLayout, getSiteContext } from '../../lib/data';
 import { alternatesFor } from '../../lib/links';
-import { PAGE_BY_SLUG_QUERY, PAGE_PATHS_QUERY } from '../../lib/queries';
+import { PAGE_BY_SLUG_QUERY } from '../../lib/queries';
 import type { Page } from '../../lib/types';
 
-export async function getStaticPaths() {
-	const languages = await getLanguages();
-	const pages = await sanityClient.fetch<{ _id: string; language: string; slug: string }[]>(PAGE_PATHS_QUERY, {
-		languages,
-	});
-	// The home and blog pages have their own routes
-	const reserved = new Set<string>();
-	for (const lang of languages) {
-		const { settings } = await getLayout(lang);
-		if (settings?.homePageId) reserved.add(settings.homePageId);
-		if (settings?.blogPageId) reserved.add(settings.blogPageId);
-	}
-	return pages
-		.filter((page) => !reserved.has(page._id) && page.slug !== 'blog')
-		.map((page) => ({ params: { lang: page.language, slug: page.slug } }));
-}
-
-const { lang, slug } = Astro.params;
-const page = await sanityClient.fetch<Page>(PAGE_BY_SLUG_QUERY, { lang, slug });
-const ctx = await getSiteContext(lang, alternatesFor(page.translations, await getLanguages(), 'page'));
+// Rendered when visited (and cached), so anything published in Sanity shows up without a rebuild
+const lang = Astro.params.lang!;
+const slug = Astro.params.slug!;
+const languages = await getLanguages();
+const page = languages.includes(lang) ? await sanityClient.fetch<Page | null>(PAGE_BY_SLUG_QUERY, { lang, slug }) : null;
+// The home and blog pages have their own routes (/fr/ and /fr/blog/), so their slugs 404 here
+const { settings } = await getLayout(lang);
+if (!page || page._id === settings?.homePageId || page._id === settings?.blogPageId) return Astro.rewrite('/404');
+const ctx = await getSiteContext(lang, alternatesFor(page.translations, languages, 'page'));
 ---
 
 <PageView page={page} ctx={ctx} />

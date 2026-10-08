@@ -6,21 +6,13 @@ import { alternatesFor } from '../../../lib/links';
 import { PAGE_BY_ID_QUERY } from '../../../lib/queries';
 import type { Page } from '../../../lib/types';
 
-export async function getStaticPaths() {
-	const languages = await getLanguages();
-	const paths = await Promise.all(
-		languages.map(async (lang) => {
-			const { settings } = await getLayout(lang);
-			return settings?.blogPageId ? { params: { lang }, props: { blogPageId: settings.blogPageId } } : null;
-		}),
-	);
-	return paths.filter((path) => path !== null);
-}
-
-const { lang } = Astro.params;
-const { blogPageId } = Astro.props;
-const page = await sanityClient.fetch<Page>(PAGE_BY_ID_QUERY, { id: blogPageId, lang });
-const ctx = await getSiteContext(lang, alternatesFor(page.translations, await getLanguages(), 'blog'));
+// Rendered when visited (and cached), so anything published in Sanity shows up without a rebuild
+const lang = Astro.params.lang!;
+const languages = await getLanguages();
+const blogPageId = languages.includes(lang) ? (await getLayout(lang)).settings?.blogPageId : undefined;
+const page = blogPageId ? await sanityClient.fetch<Page | null>(PAGE_BY_ID_QUERY, { id: blogPageId, lang }) : null;
+if (!page) return Astro.rewrite('/404');
+const ctx = await getSiteContext(lang, alternatesFor(page.translations, languages, 'blog'));
 ---
 
 <PageView page={page} ctx={ctx} kind="blog" />
