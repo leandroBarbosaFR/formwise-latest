@@ -22,7 +22,9 @@ const logoShapes = logoSvg.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s
 </script>
 
 <div data-intro-overlay aria-hidden="true" class="fixed inset-0 z-50 hidden overflow-clip bg-[#0349aa]">
-	<svg data-intro-logo viewBox="0 0 264.025 39.6986" preserveAspectRatio="none" fill="none" class="absolute inset-0 size-full">
+	<!-- Hidden until the script frames it: its default viewBox would stretch the whole logo across the
+	     screen. Frame 1 is solid blue anyway (the camera starts inside the arch). -->
+	<svg data-intro-logo viewBox="0 0 264.025 39.6986" preserveAspectRatio="none" fill="none" class="invisible absolute inset-0 size-full">
 		<Fragment set:html={logoShapes} />
 	</svg>
 	<div data-intro-sheet class="absolute inset-0 translate-y-[calc(100%+20px)] bg-white"></div>
@@ -98,6 +100,7 @@ const logoShapes = logoSvg.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s
 			overlay.style.backgroundColor = mix([3, 73, 170], [2, 61, 157], p);
 		};
 		showZoom(0);
+		logo.classList.remove('invisible');
 		await wait(DELAY.zoom);
 		await new Promise<void>((resolve) => {
 			const t0 = performance.now();

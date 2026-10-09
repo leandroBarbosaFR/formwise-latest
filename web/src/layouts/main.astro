@@ -183,6 +183,11 @@ const cookiesVersion = (
 		<Footer ctx={ctx} />
 
 		<script>
+			import { initReveals } from '../lib/reveal';
+
+			// Headings and their text slide in as each section after the hero scrolls into view
+			initReveals();
+
 			// Close dropdowns (language switcher, mobile menu) when clicking elsewhere or pressing Escape
 			const closeDropdowns = (except?: Element | null) =>
 				document.querySelectorAll<HTMLDetailsElement>('details[data-dropdown][open]').forEach((el) => {
