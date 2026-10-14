@@ -10,8 +10,9 @@ import {BASE_LANGUAGE, LANGUAGES, LOCALIZED_SINGLETONS, LOCALIZED_TYPES} from '.
 
 const LANGUAGE_AWARE_TYPES = [...LOCALIZED_TYPES, ...LOCALIZED_SINGLETONS]
 
-// Website shown in the Presentation tab: the local dev server while working on the Studio locally
-const SITE_URL = process.env.SANITY_STUDIO_SITE_URL || 'https://formwise.fr'
+// Website shown in the Presentation tab: the local dev server while working on the Studio locally.
+// Switch to https://formwise.fr once the domain points to Vercel.
+const SITE_URL = process.env.SANITY_STUDIO_SITE_URL || 'https://formwise-latest.vercel.app'
 const LOCAL_SITE_URL = 'http://localhost:4321'
 
 export default defineConfig({
