@@ -26,7 +26,8 @@ const label = ctx.layout.settings?.strings?.language ?? 'Language';
 			</summary>
 			<ul
 				class:list={[
-					'absolute right-0 z-30 grid max-h-80 w-56 grid-cols-1 overflow-y-auto rounded-xl bg-white p-2 text-sm text-ink shadow-xl ring-1 ring-black/5',
+					// Same blue glass card as the menu
+					'language-list absolute right-0 z-30 grid max-h-80 w-56 grid-cols-1 overflow-y-auto rounded-2xl bg-brand/75 p-2 text-sm text-white shadow-xl ring-1 ring-white/10 backdrop-blur-2xl',
 					placement === 'down' ? 'top-full mt-2' : 'bottom-full mb-2',
 				]}
 			>
@@ -38,12 +39,12 @@ const label = ctx.layout.settings?.strings?.language ?? 'Language';
 							lang={lang}
 							aria-current={lang === ctx.lang ? 'true' : undefined}
 							class:list={[
-								'flex items-center justify-between rounded-lg px-3 py-2 transition hover:bg-brand-soft',
-								lang === ctx.lang && 'bg-brand-soft text-brand',
+								'flex items-center justify-between rounded-lg px-3 py-2 transition',
+								lang === ctx.lang ? 'bg-white/15 text-white' : 'text-white/75 hover:bg-white/10 hover:text-white',
 							]}
 						>
 							{languageName(lang)}
-							<span class="type-small text-slate uppercase">{lang}</span>
+							<span class="text-xs tracking-[0.08em] text-white/50 uppercase">{lang}</span>
 						</a>
 					</li>
 				))}
@@ -51,3 +52,11 @@ const label = ctx.layout.settings?.strings?.language ?? 'Language';
 		</details>
 	)
 }
+
+<style>
+	/* Discreet scrollbar on the blue card */
+	.language-list {
+		scrollbar-width: thin;
+		scrollbar-color: rgb(255 255 255 / 0.3) transparent;
+	}
+</style>

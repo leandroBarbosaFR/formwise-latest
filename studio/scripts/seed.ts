@@ -6,10 +6,10 @@
  * Runs once: it stops if English settings already exist. Translations are created
  * afterwards by the `translate` Sanity Function (or "Translate document" in the Studio).
  */
-import {randomUUID} from 'node:crypto'
-import {createReadStream} from 'node:fs'
-import {basename, resolve} from 'node:path'
-import {getCliClient} from 'sanity/cli'
+import { randomUUID } from 'node:crypto'
+import { createReadStream } from 'node:fs'
+import { basename, resolve } from 'node:path'
+import { getCliClient } from 'sanity/cli'
 
 const client = getCliClient({apiVersion: '2026-10-05'})
 const ASSETS = resolve(process.cwd(), '../web/public/figma')
@@ -511,7 +511,7 @@ async function seed() {
       navItem('FAQ', {internal: faqId}),
       navItem('Contact', {internal: contactId}),
     ],
-    loginButton: button('Login', {url: 'https://app.example.com/login'}),
+    loginButton: button('Login', {url: 'https://www.formwise.fr/login'}),
   })
   await client.createIfNotExists({
     _id: 'footer-en',

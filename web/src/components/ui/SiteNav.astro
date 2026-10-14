@@ -56,61 +56,54 @@ const iconButton = 'glass flex size-10 shrink-0 cursor-pointer items-center just
 		<dialog
 			data-menu
 			aria-label={strings.menu ?? 'Menu'}
-			class="site-menu m-0 ml-auto h-dvh max-h-none w-full max-w-[600px] bg-transparent p-3 backdrop:bg-black/20 backdrop:backdrop-blur-md sm:p-6"
+			class="site-menu m-0 ml-auto h-auto max-h-dvh w-full max-w-[400px] bg-transparent p-3 backdrop:bg-black/20 backdrop:backdrop-blur-md sm:p-6"
 		>
-			<div data-menu-panel class="relative flex h-full flex-col overflow-y-auto rounded-xl bg-brand/75 text-white ring-1 ring-white/10 backdrop-blur-2xl">
-				<div data-menu-item class="flex items-center justify-end p-6">
-					<button type="button" data-menu-close aria-label={strings.close ?? 'Close'} class={iconButton}>
-						<svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" aria-hidden="true">
+			{/* Compact card that fits its content, unfolding from the burger button */}
+			<div data-menu-panel class="relative flex max-h-[calc(100dvh-24px)] flex-col overflow-y-auto rounded-2xl bg-brand/75 text-white ring-1 ring-white/10 backdrop-blur-2xl sm:max-h-[calc(100dvh-48px)]">
+				<div data-menu-item class="relative flex items-center justify-center p-4">
+					<p class="text-[11px] leading-none tracking-[0.12em] text-white/60 uppercase">{strings.menu ?? 'Menu'}</p>
+					<button
+						type="button"
+						data-menu-close
+						aria-label={strings.close ?? 'Close'}
+						class="absolute top-1/2 right-3 flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-white transition hover:bg-white/10"
+					>
+						<svg width="16" height="16" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" aria-hidden="true">
 							<path d="M200 56 56 200M200 200 56 56" />
 						</svg>
 					</button>
 				</div>
 
-				<ul class="flex flex-col px-6 pt-4 sm:px-12">
+				<ul class="flex flex-col items-center gap-1 px-6 pt-4 pb-2">
 					{navigation.map((item) => {
 						const href = resolveHref(item.link, linkContext);
 						const current = href?.split('#')[0] === Astro.url.pathname && !href?.includes('#');
 						return (
-							<li data-menu-item class="border-b border-white/15">
+							<li data-menu-item>
 								<a
 									href={href}
 									data-menu-link
 									aria-current={current ? 'page' : undefined}
 									class:list={[
-										'group flex items-center justify-between gap-6 py-5 text-[40px] leading-[1.1] tracking-[-0.03em] transition sm:text-[56px]',
-										current ? 'text-white' : 'text-white/45 hover:text-white',
+										'block py-1.5 text-center text-[28px] leading-[1.2] tracking-[-0.02em] transition',
+										current ? 'text-white' : 'text-white/75 hover:text-white',
 									]}
 									{...linkAttributes(item.link)}
 								>
 									{item.label}
-									<svg
-										width="28"
-										height="28"
-										viewBox="0 0 256 256"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="12"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										aria-hidden="true"
-										class="shrink-0 transition group-hover:translate-x-1"
-									>
-										{current ? <path d="M64 64l128 128M80 192h112V80" /> : <path d="M40 128h176M144 56l72 72-72 72" />}
-									</svg>
 								</a>
 							</li>
 						);
 					})}
 				</ul>
 
-				<div data-menu-item class="mt-auto flex flex-col gap-8 px-6 pt-16 pb-10 sm:px-12">
+				<div data-menu-item class="flex flex-col items-center gap-6 p-6">
 					{
 						settings?.socialLinks?.length ? (
-							<ul class="flex flex-col gap-3">
+							<ul class="flex flex-col items-center gap-2">
 								{settings.socialLinks.map((social) => (
 									<li>
-										<a href={social.url} target="_blank" rel="noopener noreferrer" class="text-lg leading-[1.2] text-white transition hover:text-white/60">
+										<a href={social.url} target="_blank" rel="noopener noreferrer" class="text-sm leading-[1.2] text-white/75 transition hover:text-white">
 											{social.platform}
 										</a>
 									</li>
@@ -118,13 +111,13 @@ const iconButton = 'glass flex size-10 shrink-0 cursor-pointer items-center just
 							</ul>
 						) : null
 					}
-					<div class="flex flex-wrap items-center gap-2">
+					<div class="flex flex-wrap items-center justify-center gap-2">
 						<ButtonLink
 							button={header?.ctaButton}
 							ctx={ctx}
-							class="rounded-full bg-white px-6 py-[17px] text-sm leading-[1.2] tracking-[-0.02em] text-brand transition [text-box:trim-both_cap_alphabetic] hover:bg-brand-soft"
+							class="rounded-full bg-white px-5 py-3 text-sm leading-[1.2] tracking-[-0.02em] text-brand transition [text-box:trim-both_cap_alphabetic] hover:bg-brand-soft"
 						/>
-						<ButtonLink button={header?.loginButton} ctx={ctx} class:list={[pill, 'px-6 py-[17px]']} />
+						<ButtonLink button={header?.loginButton} ctx={ctx} class:list={[pill, 'px-5 py-3']} />
 					</div>
 				</div>
 			</div>
@@ -166,7 +159,7 @@ const iconButton = 'glass flex size-10 shrink-0 cursor-pointer items-center just
 			const p = panel.getBoundingClientRect();
 			return `inset(${b.top - p.top}px ${p.right - b.right}px ${p.bottom - b.bottom}px ${b.left - p.left}px round ${b.height / 2}px)`;
 		};
-		const fullClip = 'inset(0px 0px 0px 0px round 12px)';
+		const fullClip = 'inset(0px 0px 0px 0px round 16px)';
 
 		function open() {
 			menu.showModal();
