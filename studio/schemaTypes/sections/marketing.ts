@@ -117,6 +117,8 @@ export const featureCardsSection = defineSection({
         defineArrayMember({
           name: 'featureCard',
           type: 'object',
+          // Texts shown inside the animated illustration; empty fields fall back to the English design copy
+          fieldsets: [{name: 'panel', title: 'Illustration texts', options: {collapsible: true, collapsed: false}}],
           fields: [
             defineField({
               name: 'illustration',
@@ -133,6 +135,35 @@ export const featureCardsSection = defineSection({
             }),
             defineField({name: 'title', type: 'string', validation: (rule) => rule.required()}),
             defineField({name: 'text', type: 'text', rows: 3}),
+            // Always visible (no conditional `hidden`): automatic translation skips conditional fields
+            defineField({
+              name: 'panelTitle',
+              title: 'Panel title',
+              description: 'Members: "Vos membres" · Payment: "Paiements des adhésions" · Donations: "Dons"',
+              type: 'string',
+              fieldset: 'panel',
+            }),
+            defineField({
+              name: 'panelLabel',
+              title: 'Label',
+              description: 'Members: status next to each name, "Actif" · Payment: "Payé" · Donations: not used',
+              type: 'string',
+              fieldset: 'panel',
+            }),
+            defineField({
+              name: 'panelAmount',
+              title: 'Amount',
+              description: 'Payment: "20,00 €" · Donations: total, "56 000,00 €" · Members: not used',
+              type: 'string',
+              fieldset: 'panel',
+            }),
+            defineField({
+              name: 'panelDetail',
+              title: 'Small line',
+              description: 'Members: under each name, "Membre depuis 2026" · Donations: "268 donateurs" · Payment: not used',
+              type: 'string',
+              fieldset: 'panel',
+            }),
           ],
           preview: {select: {title: 'title', subtitle: 'illustration'}},
         }),

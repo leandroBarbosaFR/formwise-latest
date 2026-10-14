@@ -90,7 +90,8 @@ export const planType = defineType({
     defineField({name: 'description', type: 'string'}),
     defineField({name: 'features', type: 'array', of: [defineArrayMember({type: 'string'})]}),
     defineField({name: 'featured', title: 'Highlight this plan', type: 'boolean', initialValue: false}),
-    defineField({name: 'badge', description: 'e.g. "Most popular"', type: 'string', hidden: ({document}) => !document?.featured}),
+    // Not conditionally hidden: automatic translation skips conditional fields
+    defineField({name: 'badge', description: 'Shown on highlighted plans only, e.g. "Le plus populaire"', type: 'string'}),
     defineField({name: 'cta', title: 'Button', type: 'button'}),
   ],
   preview: {
