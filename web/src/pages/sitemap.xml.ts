@@ -1,10 +1,10 @@
 import type { APIRoute } from 'astro';
-import { sanityClient } from 'sanity:client';
 import { getLanguages, getLayout } from '../lib/data';
 import { BASE_LANGUAGE } from '../lib/languages';
 import { blogPath, homePath, pagePath, postPath } from '../lib/links';
 import { SITEMAP_QUERY } from '../lib/queries';
 import { absoluteUrl } from '../lib/seo';
+import { sanityFetch } from '../lib/preview';
 
 interface Entry {
 	_id: string;
@@ -22,7 +22,7 @@ const escape = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&l
 // understands they are versions of the same page.
 export const GET: APIRoute = async () => {
 	const languages = await getLanguages();
-	const entries = await sanityClient.fetch<Entry[]>(SITEMAP_QUERY, { languages });
+	const entries = await sanityFetch<Entry[]>(SITEMAP_QUERY, { languages });
 
 	const homeIds = new Set<string>();
 	const blogIds = new Set<string>();

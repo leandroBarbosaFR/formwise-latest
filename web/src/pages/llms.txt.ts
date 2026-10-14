@@ -1,12 +1,12 @@
 import type { APIRoute } from 'astro';
 import { toPlainText } from 'astro-portabletext';
-import { sanityClient } from 'sanity:client';
 import { getLanguages, getLayout } from '../lib/data';
 import { BASE_LANGUAGE, languageName } from '../lib/languages';
 import { blogPath, homePath, pagePath, postPath } from '../lib/links';
 import { LLMS_QUERY } from '../lib/queries';
 import { absoluteUrl } from '../lib/seo';
 import type { RichText } from '../lib/types';
+import { sanityFetch } from '../lib/preview';
 
 interface LlmsData {
 	pages: { _id: string; title: string; slug: string; description?: string }[];
@@ -22,7 +22,7 @@ export const GET: APIRoute = async () => {
 	const [languages, { settings }, data] = await Promise.all([
 		getLanguages(),
 		getLayout(lang),
-		sanityClient.fetch<LlmsData>(LLMS_QUERY, { lang }),
+		sanityFetch<LlmsData>(LLMS_QUERY, { lang }),
 	]);
 
 	const pathOf = (page: LlmsData['pages'][number]) =>

@@ -1,9 +1,9 @@
 ---
-import { sanityClient } from 'sanity:client';
 import type { SiteContext } from '../../lib/data';
 import { POSTS_QUERY } from '../../lib/queries';
 import type { PostCard as PostCardData, Section } from '../../lib/types';
 import PostCard from './PostCard.astro';
+import { sanityFetch } from '../../lib/preview';
 
 interface Props {
 	section: Section;
@@ -12,7 +12,7 @@ interface Props {
 const { section, ctx } = Astro.props;
 const strings = ctx.layout.settings?.strings ?? {};
 
-const allPosts = await sanityClient.fetch<PostCardData[]>(POSTS_QUERY, {
+const allPosts = await sanityFetch<PostCardData[]>(POSTS_QUERY, {
 	lang: ctx.lang,
 	categoryIds: section.categoryIds?.filter(Boolean)?.length ? section.categoryIds : null,
 });

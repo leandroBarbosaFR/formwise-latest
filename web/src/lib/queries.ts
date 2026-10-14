@@ -51,8 +51,8 @@ export const LANGUAGES_QUERY = defineQuery(
 	`array::unique(*[_type == "settings" && defined(language)].language)`,
 );
 
-// Singletons fall back to English until a translation exists
-const singleton = (type: string) => `coalesce(*[_id == "${type}-" + $lang][0], *[_id == "${type}-en"][0])`;
+// Singletons fall back to French (the base language) until a translation exists
+const singleton = (type: string) => `coalesce(*[_id == "${type}-" + $lang][0], *[_id == "${type}-fr"][0])`;
 
 export const LAYOUT_QUERY = defineQuery(`{
 	"integrations": *[_id == "integrations"][0]{

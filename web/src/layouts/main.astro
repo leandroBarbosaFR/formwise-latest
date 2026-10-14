@@ -1,8 +1,11 @@
 ---
+import { VisualEditing } from '@sanity/astro/visual-editing';
+import { stegaClean } from '@sanity/client/stega';
 import '../styles/global.css';
 import Footer from '../components/sections/Footer.astro';
 import type { SiteContext } from '../lib/data';
 import { BASE_LANGUAGE } from '../lib/languages';
+import { getPreview } from '../lib/preview';
 import { urlFor } from '../lib/sanity';
 import { ogLocale, siteGraph } from '../lib/seo';
 import type { Seo } from '../lib/types';
@@ -17,7 +20,9 @@ interface Props {
 	// Page-specific structured data, added to the site-wide Organization and WebSite
 	jsonLd?: Record<string, unknown>[];
 }
-const { ctx, title, seo, type = 'website', article, jsonLd = [] } = Astro.props;
+// stegaClean: the <head> never gets click-to-edit markers (only previews have them)
+const { ctx, ...meta } = Astro.props;
+const { title, seo, type = 'website', article, jsonLd = [] } = stegaClean(meta);
 const { settings } = ctx.layout;
 const defaults = settings?.seo ?? {};
 
@@ -34,7 +39,9 @@ const ogImage = image ? urlFor(image).width(1200).height(630).fit('crop').url() 
 const integrations = ctx.layout.integrations;
 
 // One JSON-LD graph per page. `<` is escaped so content can never close the script tag.
-const structuredData = JSON.stringify({ '@context': 'https://schema.org', '@graph': [...siteGraph(ctx), ...jsonLd] }).replace(
+const structuredData = JSON.stringify(
+	stegaClean({ '@context': 'https://schema.org', '@graph': [...siteGraph(ctx), ...jsonLd] }),
+).replace(
 	/</g,
 	'\\u003c',
 );
@@ -198,5 +205,7 @@ const cookiesVersion = (
 			);
 			document.addEventListener('keydown', (event) => event.key === 'Escape' && closeDropdowns());
 		</script>
+		<!-- Click-to-edit overlays, only in the Studio's Presentation tab -->
+		<VisualEditing enabled={!!getPreview()} />
 	</body>
 </html>

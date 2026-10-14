@@ -45,7 +45,7 @@ export const integrationsType = defineType({
           name: 'cookiesVersions',
           title: 'Banner per language',
           description:
-            'The "Cookies version" of each banner. Languages without one use the English banner, then the first one in the list.',
+            'The "Cookies version" of each banner. Languages without one use the French banner, then the first one in the list.',
           type: 'array',
           of: [
             defineArrayMember({

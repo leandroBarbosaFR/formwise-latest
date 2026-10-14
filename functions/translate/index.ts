@@ -2,7 +2,7 @@ import {randomUUID} from 'node:crypto'
 import {documentEventHandler} from '@sanity/functions'
 import {createClient} from '@sanity/client'
 
-// Translates every published English document into the other 23 official EU languages
+// Translates every published French document into the other 23 official EU languages
 // using Sanity Agent Actions. Keep the language lists in sync with studio/languages.ts.
 
 // Deployed schema of the "default" Studio workspace (`npx sanity schema deploy`)
@@ -11,8 +11,9 @@ const SCHEMA_ID = '_.schemas.default'
 // true: translations go live straight away. false: they are saved as drafts to review first.
 const PUBLISH_TRANSLATIONS = true
 
-const BASE_LANGUAGE = {id: 'en', title: 'English'}
+const BASE_LANGUAGE = {id: 'fr', title: 'French'}
 const TARGET_LANGUAGES = [
+  {id: 'en', title: 'English'},
   {id: 'bg', title: 'Bulgarian'},
   {id: 'cs', title: 'Czech'},
   {id: 'da', title: 'Danish'},
@@ -21,7 +22,6 @@ const TARGET_LANGUAGES = [
   {id: 'es', title: 'Spanish'},
   {id: 'et', title: 'Estonian'},
   {id: 'fi', title: 'Finnish'},
-  {id: 'fr', title: 'French'},
   {id: 'ga', title: 'Irish'},
   {id: 'hr', title: 'Croatian'},
   {id: 'hu', title: 'Hungarian'},
@@ -47,6 +47,7 @@ const SINGLETON_TYPES = ['settings', 'header', 'footer']
 interface EventData {
   _id: string
   _type: string
+  language?: string
 }
 
 // Same shape the document-internationalization plugin writes: the language is in `language`,
@@ -71,9 +72,11 @@ const translationEntry = (language: string, id: string, type: string, weak: bool
 })
 
 export const handler = documentEventHandler<EventData>(async ({context, event}) => {
-  const {_id, _type} = event.data
-  // Second safety net besides the blueprint filter: never translate documents this function wrote
-  if (_id.startsWith('tr-') || (SINGLETON_TYPES.includes(_type) && _id !== `${_type}-${BASE_LANGUAGE.id}`)) {
+  const {_id, _type, language} = event.data
+  // Second safety net besides the blueprint filter: never translate documents this function wrote.
+  // It only ever writes other languages, so checking the language is enough (French documents
+  // created by earlier English-based runs have "tr-" IDs and are valid sources now).
+  if (language !== BASE_LANGUAGE.id || (SINGLETON_TYPES.includes(_type) && _id !== `${_type}-${BASE_LANGUAGE.id}`)) {
     console.log(`Skipping ${_id}: written by this function`)
     return
   }
@@ -88,10 +91,10 @@ export const handler = documentEventHandler<EventData>(async ({context, event}) 
       )
   const existing = new Map(metadata?.translations?.map((t) => [entryLanguage(t), t.value?._ref]) ?? [])
 
-  // A stray copy of another English document (e.g. left behind by a failed run) is never a source
+  // A stray copy of another French document (e.g. left behind by a failed run) is never a source
   const registeredSource = existing.get(BASE_LANGUAGE.id)
   if (registeredSource && registeredSource !== _id) {
-    console.log(`Skipping ${_id}: ${registeredSource} is the English source of this group`)
+    console.log(`Skipping ${_id}: ${registeredSource} is the French source of this group`)
     return
   }
 
@@ -123,7 +126,7 @@ export const handler = documentEventHandler<EventData>(async ({context, event}) 
     const writeId = PUBLISH_TRANSLATIONS ? targetId : `drafts.${targetId}`
 
     // Create the target with its language set before translating. Left to itself, the
-    // action first writes an English copy of the source, which matches this function's
+    // action first writes a French copy of the source, which matches this function's
     // filter and triggers it again (recursion).
     await client.createIfNotExists({_id: writeId, _type, language: language.id})
     if (isNew && metadataId) {

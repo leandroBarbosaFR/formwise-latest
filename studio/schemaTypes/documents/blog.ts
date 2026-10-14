@@ -3,10 +3,11 @@ import {DocumentTextIcon} from '@sanity/icons/DocumentText'
 import {TagIcon} from '@sanity/icons/Tag'
 import {UserIcon} from '@sanity/icons/User'
 import {languageField, slugField} from '../objects/fields'
+import {BASE_LANGUAGE} from '../../languages'
 
 const sameLanguage: ReferenceFilterResolver = ({document}) => ({
   filter: 'language == $language',
-  params: {language: document?.language ?? 'en'},
+  params: {language: document?.language ?? BASE_LANGUAGE},
 })
 
 export const postType = defineType({

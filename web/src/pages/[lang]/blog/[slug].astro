@@ -1,5 +1,4 @@
 ---
-import { sanityClient } from 'sanity:client';
 import RichText from '../../../components/rich-text/RichText.astro';
 import PageHeader from '../../../components/sections/PageHeader.astro';
 import PostCard from '../../../components/sections/PostCard.astro';
@@ -11,12 +10,13 @@ import { minutesToRead } from '../../../lib/richText';
 import { hasImage, imageDimensions, urlFor } from '../../../lib/sanity';
 import { postGraph } from '../../../lib/seo';
 import type { Post } from '../../../lib/types';
+import { sanityFetch } from '../../../lib/preview';
 
 // Rendered when visited (and cached), so anything published in Sanity shows up without a rebuild
 const lang = Astro.params.lang!;
 const slug = Astro.params.slug!;
 const languages = await getLanguages();
-const post = languages.includes(lang) ? await sanityClient.fetch<Post | null>(POST_QUERY, { lang, slug }) : null;
+const post = languages.includes(lang) ? await sanityFetch<Post | null>(POST_QUERY, { lang, slug }) : null;
 if (!post) return Astro.rewrite('/404');
 const ctx = await getSiteContext(lang, alternatesFor(post.translations, languages, 'post'));
 const strings = ctx.layout.settings?.strings ?? {};

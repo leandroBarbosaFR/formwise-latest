@@ -1,7 +1,8 @@
 // The 24 official EU languages. Keep in sync with studio/languages.ts.
-export const BASE_LANGUAGE = 'en';
+export const BASE_LANGUAGE = 'fr';
 
 export const LANGUAGES = [
+	{ id: 'fr', title: 'French', native: 'Français' },
 	{ id: 'en', title: 'English', native: 'English' },
 	{ id: 'bg', title: 'Bulgarian', native: 'Български' },
 	{ id: 'cs', title: 'Czech', native: 'Čeština' },
@@ -11,7 +12,6 @@ export const LANGUAGES = [
 	{ id: 'es', title: 'Spanish', native: 'Español' },
 	{ id: 'et', title: 'Estonian', native: 'Eesti' },
 	{ id: 'fi', title: 'Finnish', native: 'Suomi' },
-	{ id: 'fr', title: 'French', native: 'Français' },
 	{ id: 'ga', title: 'Irish', native: 'Gaeilge' },
 	{ id: 'hr', title: 'Croatian', native: 'Hrvatski' },
 	{ id: 'hu', title: 'Hungarian', native: 'Magyar' },

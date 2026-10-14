@@ -1,5 +1,6 @@
 import {defineField, defineType} from 'sanity'
 import {LinkIcon} from '@sanity/icons/Link'
+import {BASE_LANGUAGE} from '../../languages'
 
 export const linkType = defineType({
   name: 'link',
@@ -26,7 +27,7 @@ export const linkType = defineType({
       title: 'Page or post',
       type: 'reference',
       to: [{type: 'page'}, {type: 'post'}],
-      options: {filter: ({document}) => ({filter: 'language == $language', params: {language: document?.language ?? 'en'}})},
+      options: {filter: ({document}) => ({filter: 'language == $language', params: {language: document?.language ?? BASE_LANGUAGE}})},
       hidden: ({parent}) => parent?.linkType !== 'internal',
     }),
     defineField({

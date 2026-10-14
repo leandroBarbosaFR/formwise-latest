@@ -1,5 +1,5 @@
-import { sanityClient } from 'sanity:client';
 import { BASE_LANGUAGE, LANGUAGES } from './languages';
+import { getPreview, sanityFetch } from './preview';
 import { LANGUAGES_QUERY, LAYOUT_QUERY } from './queries';
 import type { LayoutData } from './types';
 
@@ -17,6 +17,8 @@ export interface SiteContext {
 const TTL_MS = 5000;
 const cache = new Map<string, { at: number; value: Promise<unknown> }>();
 function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
+	// Previews always show the latest edits
+	if (getPreview()) return load();
 	const hit = cache.get(key);
 	if (hit && Date.now() - hit.at < TTL_MS) return hit.value as Promise<T>;
 	const value = load();
@@ -29,7 +31,7 @@ function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
 // Languages with general settings in Sanity, in the order of LANGUAGES
 export function getLanguages(): Promise<string[]> {
 	return cached('languages', () =>
-		sanityClient.fetch<string[]>(LANGUAGES_QUERY).then((found) => {
+		sanityFetch<string[]>(LANGUAGES_QUERY).then((found) => {
 			const available = new Set([BASE_LANGUAGE, ...(found ?? [])]);
 			return LANGUAGES.map((l) => l.id).filter((id) => available.has(id));
 		}),
@@ -37,7 +39,7 @@ export function getLanguages(): Promise<string[]> {
 }
 
 export function getLayout(lang: string): Promise<LayoutData> {
-	return cached(`layout:${lang}`, () => sanityClient.fetch<LayoutData>(LAYOUT_QUERY, { lang }));
+	return cached(`layout:${lang}`, () => sanityFetch<LayoutData>(LAYOUT_QUERY, { lang }));
 }
 
 export async function getSiteContext(lang: string, alternates: Record<string, string>): Promise<SiteContext> {

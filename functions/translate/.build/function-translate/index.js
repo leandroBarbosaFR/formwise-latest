@@ -5,10 +5,14 @@ import { createClient } from "@sanity/client";
 var SCHEMA_ID = "_.schemas.default";
 var PUBLISH_TRANSLATIONS = true;
 var BASE_LANGUAGE = {
-	id: "en",
-	title: "English"
+	id: "fr",
+	title: "French"
 };
 var TARGET_LANGUAGES = [
+	{
+		id: "en",
+		title: "English"
+	},
 	{
 		id: "bg",
 		title: "Bulgarian"
@@ -40,10 +44,6 @@ var TARGET_LANGUAGES = [
 	{
 		id: "fi",
 		title: "Finnish"
-	},
-	{
-		id: "fr",
-		title: "French"
 	},
 	{
 		id: "ga",
@@ -123,8 +123,8 @@ var translationEntry = (language, id, type, weak) => ({
 	}
 });
 var handler = documentEventHandler(async ({ context, event }) => {
-	const { _id, _type } = event.data;
-	if (_id.startsWith("tr-") || SINGLETON_TYPES.includes(_type) && _id !== `${_type}-${BASE_LANGUAGE.id}`) {
+	const { _id, _type, language } = event.data;
+	if (language !== BASE_LANGUAGE.id || SINGLETON_TYPES.includes(_type) && _id !== `${_type}-${BASE_LANGUAGE.id}`) {
 		console.log(`Skipping ${_id}: written by this function`);
 		return;
 	}
@@ -138,7 +138,7 @@ var handler = documentEventHandler(async ({ context, event }) => {
 	const existing = new Map(metadata?.translations?.map((t) => [entryLanguage(t), t.value?._ref]) ?? []);
 	const registeredSource = existing.get(BASE_LANGUAGE.id);
 	if (registeredSource && registeredSource !== _id) {
-		console.log(`Skipping ${_id}: ${registeredSource} is the English source of this group`);
+		console.log(`Skipping ${_id}: ${registeredSource} is the French source of this group`);
 		return;
 	}
 	let metadataId = metadata?._id;

@@ -14,6 +14,8 @@ import {StackIcon} from '@sanity/icons/Stack'
 import {PlugIcon} from '@sanity/icons/Plug'
 import {BASE_LANGUAGE, LANGUAGES} from './languages'
 
+const BASE_LANGUAGE_TITLE = LANGUAGES.find(({id}) => id === BASE_LANGUAGE)!.title
+
 const languageLabel = (id: string, title: string) => `${title} (${id.toUpperCase()})`
 
 // One fixed-ID document per language, e.g. `header-fr`
@@ -62,9 +64,9 @@ function localizedList(S: StructureBuilder, type: string, title: string, icon: C
         .items([
           S.listItem()
             .id(`${type}-${BASE_LANGUAGE}`)
-            .title(languageLabel(BASE_LANGUAGE, 'English'))
+            .title(languageLabel(BASE_LANGUAGE, BASE_LANGUAGE_TITLE))
             .icon(icon)
-            .child(listFor(BASE_LANGUAGE, `${title} · English`)),
+            .child(listFor(BASE_LANGUAGE, `${title} · ${BASE_LANGUAGE_TITLE}`)),
           S.divider(),
           ...LANGUAGES.filter(({id}) => id !== BASE_LANGUAGE).map(({id, title: languageTitle}) =>
             S.listItem()

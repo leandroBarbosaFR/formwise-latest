@@ -1,7 +1,8 @@
 // The 24 official EU languages. Keep in sync with web/src/lib/languages.ts.
-export const BASE_LANGUAGE = 'en'
+export const BASE_LANGUAGE = 'fr'
 
 export const LANGUAGES = [
+  {id: 'fr', title: 'French'},
   {id: 'en', title: 'English'},
   {id: 'bg', title: 'Bulgarian'},
   {id: 'cs', title: 'Czech'},
@@ -11,7 +12,6 @@ export const LANGUAGES = [
   {id: 'es', title: 'Spanish'},
   {id: 'et', title: 'Estonian'},
   {id: 'fi', title: 'Finnish'},
-  {id: 'fr', title: 'French'},
   {id: 'ga', title: 'Irish'},
   {id: 'hr', title: 'Croatian'},
   {id: 'hu', title: 'Hungarian'},

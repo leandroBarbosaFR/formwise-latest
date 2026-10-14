@@ -3,7 +3,7 @@ import {defineBlueprint, defineDocumentFunction} from '@sanity/blueprints'
 // Keep in sync with studio/languages.ts and functions/translate/index.ts
 const TRANSLATED_TYPES = ['settings', 'header', 'footer', 'page', 'post', 'category', 'author', 'faq', 'testimonial', 'plan']
 const SINGLETON_TYPES = ['settings', 'header', 'footer']
-const ENGLISH_SINGLETONS = SINGLETON_TYPES.map((type) => `${type}-en`)
+const BASE_SINGLETONS = SINGLETON_TYPES.map((type) => `${type}-fr`)
 
 export default defineBlueprint({
   resources: [
@@ -12,17 +12,16 @@ export default defineBlueprint({
       timeout: 300,
       event: {
         on: ['create', 'update'],
-        // Only published English originals trigger a translation. Documents written by the
-        // function (IDs starting with "tr-", and non-English singletons like "settings-fr")
-        // are excluded by ID, so the function can never trigger itself, whatever their language.
+        // Only published French originals trigger a translation. The function only writes the
+        // other languages (and singletons like "settings-en"), so it can never trigger itself.
+        // French documents may have "tr-" IDs: they were created when English was the source.
         filter: [
           `_type in ${JSON.stringify(TRANSLATED_TYPES)}`,
-          `language == "en"`,
+          `language == "fr"`,
           `!(_id in path("drafts.**"))`,
-          `!string::startsWith(_id, "tr-")`,
-          `(_id in ${JSON.stringify(ENGLISH_SINGLETONS)} || !(_type in ${JSON.stringify(SINGLETON_TYPES)}))`,
+          `(_id in ${JSON.stringify(BASE_SINGLETONS)} || !(_type in ${JSON.stringify(SINGLETON_TYPES)}))`,
         ].join(' && '),
-        projection: '{_id, _type}',
+        projection: '{_id, _type, language}',
       },
     }),
   ],

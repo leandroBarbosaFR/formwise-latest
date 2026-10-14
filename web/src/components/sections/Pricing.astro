@@ -77,12 +77,13 @@ const toggle = [
 		)
 	}
 
-	<div class="grid w-full grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+	<!-- Wrapping flex (not a grid) so fewer than four plans stay centred instead of sticking to the left -->
+	<div class="flex w-full flex-wrap justify-center gap-5">
 		{
 			plans.map((plan) => (
 				<article
 					class:list={[
-						'relative flex flex-col items-center gap-6 overflow-clip rounded-xl py-6',
+						'relative flex w-full flex-col items-center gap-6 overflow-clip rounded-xl py-6 md:w-[calc((100%-20px)/2)] xl:w-[calc((100%-60px)/4)]',
 						plan.featured ? 'bg-brand text-white' : 'border border-black/10 bg-white text-black',
 					]}
 				>

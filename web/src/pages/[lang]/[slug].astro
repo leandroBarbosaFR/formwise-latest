@@ -1,16 +1,16 @@
 ---
-import { sanityClient } from 'sanity:client';
 import PageView from '../../components/PageView.astro';
 import { getLanguages, getLayout, getSiteContext } from '../../lib/data';
 import { alternatesFor } from '../../lib/links';
 import { PAGE_BY_SLUG_QUERY } from '../../lib/queries';
 import type { Page } from '../../lib/types';
+import { sanityFetch } from '../../lib/preview';
 
 // Rendered when visited (and cached), so anything published in Sanity shows up without a rebuild
 const lang = Astro.params.lang!;
 const slug = Astro.params.slug!;
 const languages = await getLanguages();
-const page = languages.includes(lang) ? await sanityClient.fetch<Page | null>(PAGE_BY_SLUG_QUERY, { lang, slug }) : null;
+const page = languages.includes(lang) ? await sanityFetch<Page | null>(PAGE_BY_SLUG_QUERY, { lang, slug }) : null;
 // The home and blog pages have their own routes (/fr/ and /fr/blog/), so their slugs 404 here
 const { settings } = await getLayout(lang);
 if (!page || page._id === settings?.homePageId || page._id === settings?.blogPageId) return Astro.rewrite('/404');
