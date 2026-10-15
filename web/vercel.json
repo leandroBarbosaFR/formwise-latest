@@ -1,24 +1,67 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "trailingSlash": true,
+  "redirects": [
+    {
+      "source": "/app",
+      "destination": "https://app.formwise.fr/app",
+      "permanent": false
+    },
+    {
+      "source": "/app/:path*",
+      "destination": "https://app.formwise.fr/app/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/:lang(fr|en|pt|es)?/:page(login|register|forgot-password|reset-password|dashboard)",
+      "destination": "https://app.formwise.fr/app/:page",
+      "permanent": false
+    },
+    {
+      "source": "/:lang(fr|en|pt|es)?/:page(login|register|forgot-password|reset-password|dashboard)/",
+      "destination": "https://app.formwise.fr/app/:page",
+      "permanent": false
+    }
+  ],
   "headers": [
     {
       "source": "/_astro/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
       "source": "/fonts/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
       "source": "/figma/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000"
+        }
+      ]
     },
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
         {
           "key": "Content-Security-Policy",
           "value": "frame-ancestors 'self' https://*.sanity.studio https://www.sanity.io https://sanity.io http://localhost:*"
