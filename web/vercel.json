@@ -8,6 +8,16 @@
       "permanent": false
     },
     {
+      "source": "/app/",
+      "destination": "https://app.formwise.fr/app",
+      "permanent": false
+    },
+    {
+      "source": "/app/:path*/",
+      "destination": "https://app.formwise.fr/app/:path*",
+      "permanent": false
+    },
+    {
       "source": "/app/:path*",
       "destination": "https://app.formwise.fr/app/:path*",
       "permanent": false
