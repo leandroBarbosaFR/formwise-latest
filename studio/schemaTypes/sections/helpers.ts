@@ -5,8 +5,12 @@ import type {ComponentType} from 'react'
 export const anchorField = defineField({
   name: 'anchorId',
   title: 'Section ID',
-  description: 'Optional. Used by links pointing to this section, e.g. "pricing".',
+  description:
+    'Optional. Used by links pointing to this section, e.g. "pricing". Keep it the same in every language: it is copied, never translated.',
   type: 'string',
+  // Links use the same anchor in every language (`/de/#pricing`), so translations must copy the ID as is.
+  // The translate function (Agent Actions) and AI Assist each have their own opt-out.
+  options: {documentInternationalization: {exclude: true}, aiAssist: {exclude: true}},
   validation: (rule) =>
     rule.regex(/^[a-z0-9-]+$/, {name: 'lowercase letters, numbers and dashes'}),
 })
