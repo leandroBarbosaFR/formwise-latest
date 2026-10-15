@@ -75,6 +75,7 @@ export interface Footer {
 	tagline?: string;
 	columns?: { _key: string; title: string; links?: NavItem[] }[];
 	copyright?: string;
+	credit?: string;
 }
 
 export interface Integrations {

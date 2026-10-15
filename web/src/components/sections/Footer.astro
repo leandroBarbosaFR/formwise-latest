@@ -102,6 +102,17 @@ const hasCta = footer?.ctaHeading || footer?.ctaPrimary?.label;
 				<div class="flex flex-col gap-4 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
 					<div class="flex flex-wrap items-center gap-x-6 gap-y-2">
 						<p class="type-small text-white/60">{fillTemplate(footer?.copyright, { year: new Date().getFullYear() })}</p>
+						<p class="type-small text-white/60">
+							{footer?.credit ?? 'Built and designed by'}{' '}
+							<a
+								href="https://www.1367studio.com"
+								target="_blank"
+								rel="noopener"
+								class="underline-offset-4 transition hover:text-white hover:underline"
+							>
+								1367 Studio
+							</a>
+						</p>
 						{
 							ctx.layout.integrations?.axeptio?.clientId && (
 								<button

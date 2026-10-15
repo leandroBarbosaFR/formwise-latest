@@ -89,7 +89,8 @@ export const LAYOUT_QUERY = defineQuery(`{
 		"ctaSecondary": ctaSecondary${BUTTON},
 		tagline,
 		"columns": columns[]{_key, title, "links": links[]{_key, label, "link": link${LINK}}},
-		copyright
+		copyright,
+		credit
 	}
 }`);
 

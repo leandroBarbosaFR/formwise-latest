@@ -138,6 +138,13 @@ export const footerType = defineType({
       initialValue: '© {year} Formwise. All rights reserved.',
       group: 'links',
     }),
+    defineField({
+      name: 'credit',
+      description: 'Shown before the "1367 Studio" link at the bottom, e.g. "Built and designed by"',
+      type: 'string',
+      initialValue: 'Built and designed by',
+      group: 'links',
+    }),
   ],
   preview: languagePreview('Footer'),
 })
