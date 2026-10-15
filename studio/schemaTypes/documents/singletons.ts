@@ -88,6 +88,11 @@ export const settingsType = defineType({
         defineField({name: 'notFoundText', type: 'string', initialValue: 'The page you are looking for doesn’t exist or has moved.'}),
         defineField({name: 'backHome', type: 'string', initialValue: 'Back to home'}),
         defineField({name: 'formSuccess', type: 'string', initialValue: 'Thanks! We’ll get back to you shortly.'}),
+        defineField({
+          name: 'formError',
+          type: 'string',
+          initialValue: 'Your message could not be sent. Please try again in a moment.',
+        }),
       ],
     }),
     defineField({name: 'seo', title: 'Default SEO', type: 'seo', group: 'seo'}),

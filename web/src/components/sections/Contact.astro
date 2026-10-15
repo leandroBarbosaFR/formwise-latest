@@ -9,9 +9,8 @@ interface Props {
 const { section, ctx } = Astro.props;
 const { settings } = ctx.layout;
 const labels = section.labels ?? {};
-const endpoint: string | undefined = section.formEndpoint;
-// Without a form service the browser opens the visitor's email app
-const action = endpoint ?? (settings?.email ? `mailto:${settings.email}` : undefined);
+// A form service set in Sanity takes over; otherwise messages are emailed to the team with Resend
+const action: string = section.formEndpoint ?? '/api/contact/';
 
 const details = [
 	// Hidden for now, until the real address replaces the placeholder in Settings
@@ -54,10 +53,15 @@ const field =
 		<form
 			action={action}
 			method="post"
-			enctype={endpoint ? undefined : 'text/plain'}
-			data-contact-form={endpoint ? '' : undefined}
+			data-contact-form
 			class="flex flex-col gap-4 rounded-2xl border border-black/10 p-6 sm:p-8"
 		>
+			<input type="hidden" name="lang" value={ctx.lang} />
+			<!-- Left empty by people (it is hidden), filled in by spam bots -->
+			<label class="sr-only" aria-hidden="true">
+				Website
+				<input name="website" tabindex="-1" autocomplete="off" />
+			</label>
 			<div class="grid gap-4 sm:grid-cols-2">
 				<label class="flex flex-col gap-2 text-sm">
 					{labels.name ?? 'Name'}
@@ -85,17 +89,25 @@ const field =
 			<p data-success hidden class="type-body rounded-xl bg-brand-soft px-4 py-3 text-brand">
 				{settings?.strings?.formSuccess}
 			</p>
+			<p data-error hidden role="alert" class="type-body rounded-xl bg-red-50 px-4 py-3 text-red-700">
+				{settings?.strings?.formError ?? 'Your message could not be sent. Please try again in a moment.'}
+			</p>
 		</form>
 	</div>
 </section>
 
 <script>
-	// Form services such as Formspree accept JSON submissions, so the visitor stays on the page
+	// Sent in the background (our /api/contact route or a form service such as Formspree),
+	// so the visitor stays on the page
 	document.querySelectorAll<HTMLFormElement>('[data-contact-form]').forEach((form) => {
+		const success = form.querySelector<HTMLElement>('[data-success]');
+		const error = form.querySelector<HTMLElement>('[data-error]');
 		form.addEventListener('submit', async (event) => {
 			event.preventDefault();
 			const button = form.querySelector('button');
 			button?.setAttribute('disabled', '');
+			success?.setAttribute('hidden', '');
+			error?.setAttribute('hidden', '');
 			const response = await fetch(form.action, {
 				method: 'POST',
 				body: new FormData(form),
@@ -104,7 +116,9 @@ const field =
 			button?.removeAttribute('disabled');
 			if (response?.ok) {
 				form.reset();
-				form.querySelector<HTMLElement>('[data-success]')?.removeAttribute('hidden');
+				success?.removeAttribute('hidden');
+			} else {
+				error?.removeAttribute('hidden');
 			}
 		});
 	});

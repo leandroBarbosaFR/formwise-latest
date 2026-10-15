@@ -45,6 +45,7 @@ export interface Strings {
 	notFoundText?: string;
 	backHome?: string;
 	formSuccess?: string;
+	formError?: string;
 }
 
 export interface Settings {
