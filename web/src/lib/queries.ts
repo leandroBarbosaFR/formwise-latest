@@ -25,7 +25,7 @@ const SECTIONS = `sections[]{
 	_type == "heroSection" => {"cta": cta${BUTTON}},
 	_type == "ctaSection" => {"primaryCta": primaryCta${BUTTON}, "secondaryCta": secondaryCta${BUTTON}},
 	_type == "testimonialsSection" => {
-		"testimonials": testimonials[]{...${localizedItem}{_id, quote, name, role, rating}}
+		"testimonials": testimonials[]{...${localizedItem}{_id, quote, name, role, rating, avatar}}
 	},
 	_type == "pricingSection" => {
 		"plans": plans[]{...${localizedItem}{_id, name, monthlyPrice, monthlyPriceDetails, price, priceDetails, description, features, featured, badge, "cta": cta${BUTTON}}}

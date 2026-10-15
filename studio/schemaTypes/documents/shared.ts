@@ -33,13 +33,19 @@ export const testimonialType = defineType({
     defineField({name: 'name', type: 'string', validation: (rule) => rule.required()}),
     defineField({name: 'role', description: 'e.g. "President, Association Lumière"', type: 'string'}),
     defineField({
+      name: 'avatar',
+      description: 'Photo of the person, shown as a small round image next to their name',
+      type: 'image',
+      options: {hotspot: true},
+    }),
+    defineField({
       name: 'rating',
       type: 'number',
       initialValue: 5,
       validation: (rule) => rule.min(1).max(5).integer(),
     }),
   ],
-  preview: {select: {title: 'name', subtitle: 'quote'}},
+  preview: {select: {title: 'name', subtitle: 'quote', media: 'avatar'}},
 })
 
 export const planType = defineType({

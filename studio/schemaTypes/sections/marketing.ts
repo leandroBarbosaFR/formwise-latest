@@ -149,7 +149,7 @@ export const featureCardsSection = defineSection({
             defineField({
               name: 'panelLabel',
               title: 'Label',
-              description: 'Support: status badge, "En ligne" · AI: "Brouillon prêt" · Members: status next to each name, "Actif" · Payment: "Payé" · Languages, Donations: not used',
+              description: 'Support: status badge, "En ligne" · Members: status next to each name, "Actif" · Payment: "Payé" · AI, Languages, Donations: not used',
               type: 'string',
               fieldset: 'panel',
             }),

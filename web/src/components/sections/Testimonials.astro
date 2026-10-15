@@ -1,4 +1,5 @@
 ---
+import { hasImage, urlFor, type SanityImage } from '../../lib/sanity';
 import type { Section } from '../../lib/types';
 import Divider from './Divider.astro';
 
@@ -6,7 +7,7 @@ interface Props {
 	section: Section;
 }
 const { section } = Astro.props;
-const testimonials: { _id: string; quote: string; name: string; role?: string; rating?: number }[] = (
+const testimonials: { _id: string; quote: string; name: string; role?: string; rating?: number; avatar?: SanityImage }[] = (
 	section.testimonials ?? []
 ).filter(Boolean);
 ---
@@ -29,9 +30,21 @@ const testimonials: { _id: string; quote: string; name: string; role?: string; r
 						<blockquote class="type-body max-w-[395px]">“{t.quote}”</blockquote>
 					</div>
 					<Divider src="/figma/testimonial-line-1.svg" />
-					<figcaption class="flex flex-col gap-1">
-						<p class="text-lg leading-[1.2] tracking-[-0.02em]">{t.name}</p>
-						{t.role && <p class="type-small text-slate">{t.role}</p>}
+					<figcaption class="flex items-center gap-3">
+						{hasImage(t.avatar) && (
+							<img
+								src={urlFor(t.avatar).width(96).height(96).fit('crop').url()}
+								alt=""
+								width="48"
+								height="48"
+								loading="lazy"
+								class="size-12 shrink-0 rounded-full object-cover"
+							/>
+						)}
+						<div class="flex flex-col gap-1">
+							<p class="text-lg leading-[1.2] tracking-[-0.02em]">{t.name}</p>
+							{t.role && <p class="type-small text-slate">{t.role}</p>}
+						</div>
 					</figcaption>
 				</figure>
 			))
