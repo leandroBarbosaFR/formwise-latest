@@ -2,23 +2,92 @@
 // Miniature product dashboard from the Figma "Introduction" section.
 // Dimensions are kept 1:1 with the design (804×441 frame) and the whole
 // preview is scaled with `zoom` on narrow screens.
+// Labels come from the Introduction section in Sanity (translated with the page); dates, months
+// and amounts are formatted for the page's language.
+interface Props {
+	labels?: Record<string, string | undefined> | null;
+	lang: string;
+}
+const { labels, lang } = Astro.props;
+
+// Shown when a label is left empty in Sanity. Keep in sync with the placeholders in
+// studio/schemaTypes/sections/marketing.ts
+const FALLBACK = {
+	dashboard: 'Dashboard',
+	subtitle: 'Overview of your association',
+	statMembers: 'Active members',
+	statEvents: 'Events this month',
+	statPending: 'Membership pending',
+	statBalance: 'Financial balance',
+	revenueTitle: '2026 Revenue by Category',
+	categoryOther: 'Uncateg.',
+	categoryMemberships: 'Memb.',
+	categoryTicketing: 'Ticketing',
+	categorySales: 'Sales',
+	membershipTitle: 'Membership 2026',
+	membershipProgress: '24% Collected',
+	pending: 'Pending',
+	exemptions: 'Exemptions',
+	paid: 'Paid',
+	revenueExpensesTitle: 'Revenue vs. Expenses (Last 6 months)',
+	pendingPayments: '9 pending payments',
+	collectedThisYear: '€120 Collected this year',
+	nextEvent: 'Next event',
+	eventName: 'Trip',
+	recentOrders: 'Recent orders',
+	loanedEquipment: 'Loaned equipment',
+	overdue: '2 Overdue',
+	speakers: 'JBL Speakers',
+	projector: 'Epson Projector',
+	members: 'Members',
+	memberships: 'Memberships',
+	events: 'Events',
+	communication: 'Communication',
+	messages: 'Messages',
+	meetings: 'Meetings',
+	surveys: 'Surveys',
+	news: 'News',
+	support: 'Support',
+	finance: 'Finance',
+	financialOverview: 'Financial overview',
+	quotes: 'Quotes',
+	invoices: 'Invoices',
+	suppliers: 'Suppliers',
+	donations: 'Donations',
+	legalDocuments: 'Legal documents',
+	settings: 'Settings',
+};
+const t = Object.fromEntries(
+	Object.entries(FALLBACK).map(([key, fallback]) => [key, labels?.[key]?.trim() || fallback]),
+) as typeof FALLBACK;
+
+const euros = (amount: number, fractionDigits = 0) =>
+	new Intl.NumberFormat(lang, {
+		style: 'currency',
+		currency: 'EUR',
+		minimumFractionDigits: fractionDigits,
+		maximumFractionDigits: fractionDigits,
+	}).format(amount);
+const date = (iso: string, options: Intl.DateTimeFormatOptions) =>
+	new Intl.DateTimeFormat(lang, { ...options, timeZone: 'UTC' }).format(new Date(iso));
+
 const icon = (name: string) => `/figma/dash-${name}.svg`;
 
 const toolbar = ['question', 'bell-simple', 'sun-dim', 'globe'];
 
 const stats = [
-	{ label: 'Overview of your association', value: '17', icon: 'chart-bar' },
-	{ label: 'Events this month', value: '2', icon: 'calendar-check' },
-	{ label: 'Membership pending', value: '9', icon: 'warning-circle' },
-	{ label: 'Financial balance', value: '€9,567.10', icon: 'piggy-bank' },
+	{ label: t.statMembers, value: '17', icon: 'chart-bar' },
+	{ label: t.statEvents, value: '2', icon: 'calendar-check' },
+	{ label: t.statPending, value: '9', icon: 'warning-circle' },
+	{ label: t.statBalance, value: euros(9567.1, 2), icon: 'piggy-bank' },
 ];
 
 const revenueBars = [
-	{ label: 'Uncateg.', value: '€10,020', h: 89.92, w: 24.013 },
-	{ label: 'Memb.', value: '€160', h: 66.929, w: 23.502 },
-	{ label: 'Ticketing', value: '€125', h: 62.331, w: 23.502 },
-	{ label: 'Sales', value: '€115', h: 41.895, w: 23.502 },
-	{ label: 'Donations', value: '€70', h: 33.209, w: 24.013 },
+	{ label: t.categoryOther, value: euros(10020), h: 89.92, w: 24.013 },
+	{ label: t.categoryMemberships, value: euros(160), h: 66.929, w: 23.502 },
+	{ label: t.categoryTicketing, value: euros(125), h: 62.331, w: 23.502 },
+	{ label: t.categorySales, value: euros(115), h: 41.895, w: 23.502 },
+	{ label: t.donations, value: euros(70), h: 33.209, w: 24.013 },
 ];
 const revenueGridlines = [-43.99, -11.8, 22.93, 55.12];
 
@@ -29,47 +98,48 @@ const axis = [
 	{ label: '10k', line: 'line-8' },
 	{ label: '0', line: 'line-9' },
 ];
-const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
+// April to September 2026
+const months = [4, 5, 6, 7, 8, 9].map((month) => date(`2026-${String(month).padStart(2, '0')}-01`, { month: 'short' }));
 
 const menuGroups = [
 	{
-		title: 'Members',
+		title: t.members,
 		caret: 'caret-down',
 		height: 67.44,
 		items: [
-			['users', 'Members'],
-			['identification-card', 'Memberships'],
-			['calendar-blank', 'Events'],
+			['users', t.members],
+			['identification-card', t.memberships],
+			['calendar-blank', t.events],
 		],
 	},
 	{
-		title: 'Communication',
+		title: t.communication,
 		caret: 'caret-down-1',
 		height: 112.4,
 		items: [
-			['chats-circle', 'Messages'],
-			['video-camera', 'Meetings'],
-			['list-checks', 'Surveys'],
-			['newspaper-clipping', 'News'],
-			['question-1', 'Support'],
+			['chats-circle', t.messages],
+			['video-camera', t.meetings],
+			['list-checks', t.surveys],
+			['newspaper-clipping', t.news],
+			['question-1', t.support],
 		],
 	},
 	{
-		title: 'Finance',
+		title: t.finance,
 		caret: 'caret-down',
 		height: 112.4,
 		items: [
-			['bank', 'Financial overview'],
-			['files', 'Quotes'],
-			['list-checks-1', 'Invoices'],
-			['package', 'Suppliers'],
-			['heart', 'Donations'],
+			['bank', t.financialOverview],
+			['files', t.quotes],
+			['list-checks-1', t.invoices],
+			['package', t.suppliers],
+			['heart', t.donations],
 		],
 	},
 ];
 const secondaryMenu = [
-	['scales', 'Legal Documents'],
-	['gear', 'Settings'],
+	['scales', t.legalDocuments],
+	['gear', t.settings],
 ];
 
 const card = 'overflow-clip rounded-[4.087px] bg-white p-[12.262px]';
@@ -112,9 +182,9 @@ const indicator = 'h-[12.262px] w-[1.533px] shrink-0 rounded-r-[4.087px] bg-bran
 					</div>
 				</div>
 
-				<p class="absolute top-[38.32px] left-[16.35px] text-[20.436px] leading-[1.1] font-medium">Dashboard</p>
+				<p class="absolute top-[38.32px] left-[16.35px] text-[20.436px] leading-[1.1] font-medium">{t.dashboard}</p>
 				<p class="absolute top-[62.84px] left-[16.35px] text-[8.175px] leading-[1.1] font-light">
-					Overview of your association
+					{t.subtitle}
 				</p>
 
 				<div
@@ -150,7 +220,7 @@ const indicator = 'h-[12.262px] w-[1.533px] shrink-0 rounded-r-[4.087px] bg-bran
 									</div>
 								))
 							}
-							<p class="relative">2026 Revenue by Category</p>
+							<p class="relative">{t.revenueTitle}</p>
 							<div class="relative flex h-[111.378px] flex-col justify-end gap-[4.087px] pt-[9.196px]">
 								<div class="flex items-end gap-[7.664px] px-[4.087px]">
 									{
@@ -175,8 +245,8 @@ const indicator = 'h-[12.262px] w-[1.533px] shrink-0 rounded-r-[4.087px] bg-bran
 						<div class:list={[card, 'flex flex-1 flex-col justify-between']}>
 							<div class="flex h-[134.88px] flex-col justify-between">
 								<div class="flex flex-col gap-[4.087px]">
-									<p>Membership 2026</p>
-									<p class="text-[7.153px] text-dash-muted">24% Collected</p>
+									<p>{t.membershipTitle}</p>
+									<p class="text-[7.153px] text-dash-muted">{t.membershipProgress}</p>
 								</div>
 								<div class="flex h-[84.3px] overflow-clip rounded-[4.087px] bg-brand">
 									<div class="h-full w-[112.4px] shrink-0 bg-brand"></div>
@@ -186,9 +256,9 @@ const indicator = 'h-[12.262px] w-[1.533px] shrink-0 rounded-r-[4.087px] bg-bran
 								<div class="flex items-center justify-center gap-[16.349px] text-[6.131px] font-normal">
 									{
 										[
-											['bg-brand', 'Pending'],
-											['bg-dash-mid', 'Exemptions'],
-											['bg-dash-tint', 'Paid'],
+											['bg-brand', t.pending],
+											['bg-dash-mid', t.exemptions],
+											['bg-dash-tint', t.paid],
 										].map(([swatch, label]) => (
 											<div class="flex items-center gap-[4.087px]">
 												<div class:list={['size-[3.065px] rounded-[1.022px]', swatch]} />
@@ -201,7 +271,7 @@ const indicator = 'h-[12.262px] w-[1.533px] shrink-0 rounded-r-[4.087px] bg-bran
 						</div>
 
 						<div class:list={[card, 'relative flex flex-1 flex-col gap-[8.175px]']}>
-							<p>Revenue vs. Expenses (Last 6 months)</p>
+							<p>{t.revenueExpensesTitle}</p>
 							<div class="flex min-h-px flex-1 flex-col gap-[5.365px]">
 								<div class="relative flex min-h-px w-[182.906px] flex-1 items-center gap-[6.131px]">
 									<div class="flex h-full flex-1 flex-col items-end justify-end gap-[4.087px] pt-[9.196px]">
@@ -229,8 +299,8 @@ const indicator = 'h-[12.262px] w-[1.533px] shrink-0 rounded-r-[4.087px] bg-bran
 								<div class="flex items-center justify-center gap-[16.349px] text-[6.131px] font-normal">
 									{
 										[
-											['bg-brand', 'Paid'],
-											['bg-dash-alert', 'Pending'],
+											['bg-brand', t.paid],
+											['bg-dash-alert', t.pending],
 										].map(([swatch, label]) => (
 											<div class="flex items-center gap-[4.087px]">
 												<div class:list={['size-[3.065px] rounded-[1.022px]', swatch]} />
@@ -257,11 +327,11 @@ const indicator = 'h-[12.262px] w-[1.533px] shrink-0 rounded-r-[4.087px] bg-bran
 								<div class={iconTile}>
 									<img src={icon('chart-bar-1')} alt="" class="absolute top-[9.1px] left-[5.11px] size-[10.218px]" />
 								</div>
-								<p class="whitespace-nowrap">Membership 2026</p>
+								<p class="whitespace-nowrap">{t.membershipTitle}</p>
 							</div>
 							<div class="flex flex-col gap-[4.087px]">
-								<p class="text-[6.131px] whitespace-nowrap text-dash-alert">9 pending payments</p>
-								<p class="w-[89.409px] text-[7.153px]">€120 Collected this year</p>
+								<p class="text-[6.131px] whitespace-nowrap text-dash-alert">{t.pendingPayments}</p>
+								<p class="w-[89.409px] text-[7.153px]">{t.collectedThisYear}</p>
 							</div>
 						</div>
 
@@ -270,11 +340,11 @@ const indicator = 'h-[12.262px] w-[1.533px] shrink-0 rounded-r-[4.087px] bg-bran
 								<div class={iconTile}>
 									<img src={icon('chart-bar-2')} alt="" class="absolute top-[9.1px] left-[5.11px] size-[10.218px]" />
 								</div>
-								<p class="whitespace-nowrap">Next Event</p>
+								<p class="whitespace-nowrap">{t.nextEvent}</p>
 							</div>
 							<div class="flex flex-col gap-[2.044px]">
-								<p class="text-[7.153px] whitespace-nowrap">Trip</p>
-								<p class="text-[6.131px] font-light">Wednesday, August 26 2026 | Paris</p>
+								<p class="text-[7.153px] whitespace-nowrap">{t.eventName}</p>
+								<p class="text-[6.131px] font-light">{date('2026-08-26', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} | Paris</p>
 							</div>
 						</div>
 
@@ -283,11 +353,11 @@ const indicator = 'h-[12.262px] w-[1.533px] shrink-0 rounded-r-[4.087px] bg-bran
 								<div class={iconTile}>
 									<img src={icon('chart-bar-3')} alt="" class="absolute top-[9.1px] left-[5.11px] size-[10.218px]" />
 								</div>
-								<p class="whitespace-nowrap">Recent Orders</p>
+								<p class="whitespace-nowrap">{t.recentOrders}</p>
 							</div>
 							<div class="flex w-[143.055px] flex-col gap-[2.044px]">
 								<p class="text-[7.153px] whitespace-nowrap">Lucie Rousseau</p>
-								<p class="text-[6.131px] font-light">July 7, at 12:58</p>
+								<p class="text-[6.131px] font-light">{date('2026-07-07T12:58:00Z', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
 							</div>
 						</div>
 
@@ -296,14 +366,14 @@ const indicator = 'h-[12.262px] w-[1.533px] shrink-0 rounded-r-[4.087px] bg-bran
 								<div class={iconTile}>
 									<img src={icon('chart-bar-4')} alt="" class="absolute top-[9.1px] left-[5.11px] size-[10.218px]" />
 								</div>
-								<p class="whitespace-nowrap">Loaned equiment</p>
+								<p class="whitespace-nowrap">{t.loanedEquipment}</p>
 							</div>
 							<div class="flex flex-col gap-[4.087px]">
-								<p class="text-[6.131px] whitespace-nowrap text-dash-alert">2 Overdue</p>
+								<p class="text-[6.131px] whitespace-nowrap text-dash-alert">{t.overdue}</p>
 								{
 									[
-										['JBL Speakers', 'Jul 4'],
-										['Epson Projector', 'Jul 12'],
+										[t.speakers, date('2026-07-04', { day: 'numeric', month: 'short' })],
+										[t.projector, date('2026-07-12', { day: 'numeric', month: 'short' })],
 									].map(([item, date]) => (
 										<div class="flex items-center gap-[4.087px] text-[7.153px]">
 											<img src={icon('bullet')} alt="" class="size-[2.044px] shrink-0" />
@@ -329,7 +399,7 @@ const indicator = 'h-[12.262px] w-[1.533px] shrink-0 rounded-r-[4.087px] bg-bran
 						<div class="flex items-center gap-[4.087px] rounded-[4.087px] bg-[#f5f5f5] py-[5.109px]">
 							<div class={indicator}></div>
 							<img src={icon('house')} alt="" class="size-[9.196px] shrink-0" />
-							<p class={menuLabel}>Dashboard</p>
+							<p class={menuLabel}>{t.dashboard}</p>
 						</div>
 
 						<div class="flex flex-col gap-[4.087px]">

@@ -41,6 +41,78 @@ export const pageHeaderSection = defineSection({
   ],
 })
 
+// Texts of the dashboard illustration, grouped as they appear in it. The examples are shown as
+// placeholders and match the website's fallbacks (web/src/components/sections/DashboardPreview.astro).
+const DASHBOARD_FIELDSETS = [
+  {
+    name: 'overview',
+    title: 'Header and figures',
+    labels: {
+      dashboard: 'Dashboard',
+      subtitle: 'Overview of your association',
+      statMembers: 'Active members',
+      statEvents: 'Events this month',
+      statPending: 'Membership pending',
+      statBalance: 'Financial balance',
+    },
+  },
+  {
+    name: 'charts',
+    title: 'Charts',
+    labels: {
+      revenueTitle: '2026 Revenue by Category',
+      categoryOther: 'Uncateg.',
+      categoryMemberships: 'Memb.',
+      categoryTicketing: 'Ticketing',
+      categorySales: 'Sales',
+      membershipTitle: 'Membership 2026',
+      membershipProgress: '24% Collected',
+      pending: 'Pending',
+      exemptions: 'Exemptions',
+      paid: 'Paid',
+      revenueExpensesTitle: 'Revenue vs. Expenses (Last 6 months)',
+    },
+  },
+  {
+    name: 'cards',
+    title: 'Bottom cards',
+    labels: {
+      pendingPayments: '9 pending payments',
+      collectedThisYear: '€120 Collected this year',
+      nextEvent: 'Next event',
+      eventName: 'Trip',
+      recentOrders: 'Recent orders',
+      loanedEquipment: 'Loaned equipment',
+      overdue: '2 Overdue',
+      speakers: 'JBL Speakers',
+      projector: 'Epson Projector',
+    },
+  },
+  {
+    name: 'menu',
+    title: 'Side menu',
+    labels: {
+      members: 'Members',
+      memberships: 'Memberships',
+      events: 'Events',
+      communication: 'Communication',
+      messages: 'Messages',
+      meetings: 'Meetings',
+      surveys: 'Surveys',
+      news: 'News',
+      support: 'Support',
+      finance: 'Finance',
+      financialOverview: 'Financial overview',
+      quotes: 'Quotes',
+      invoices: 'Invoices',
+      suppliers: 'Suppliers',
+      donations: 'Donations',
+      legalDocuments: 'Legal documents',
+      settings: 'Settings',
+    },
+  },
+]
+
 export const introSection = defineSection({
   name: 'introSection',
   title: 'Introduction',
@@ -56,6 +128,21 @@ export const introSection = defineSection({
       description: 'Show the dashboard illustration next to the secondary text',
       type: 'boolean',
       initialValue: true,
+    }),
+    defineField({
+      name: 'dashboard',
+      title: 'Dashboard illustration texts',
+      description:
+        'Labels shown inside the dashboard illustration. Dates, months and amounts are formatted automatically for each language.',
+      type: 'object',
+      options: {collapsible: true, collapsed: true},
+      hidden: ({parent}) => parent?.showProductPreview === false,
+      fieldsets: DASHBOARD_FIELDSETS.map(({name, title}) => ({name, title, options: {collapsible: true, collapsed: true}})),
+      fields: DASHBOARD_FIELDSETS.flatMap(({name: fieldset, labels}) =>
+        Object.entries(labels).map(([name, example]) =>
+          defineField({name, type: 'string', fieldset, placeholder: example}),
+        ),
+      ),
     }),
   ],
 })
