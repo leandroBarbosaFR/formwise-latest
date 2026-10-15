@@ -14,7 +14,8 @@ const endpoint: string | undefined = section.formEndpoint;
 const action = endpoint ?? (settings?.email ? `mailto:${settings.email}` : undefined);
 
 const details = [
-	settings?.email && { label: labels.email ?? 'Email', value: settings.email, href: `mailto:${settings.email}` },
+	// Hidden for now, until the real address replaces the placeholder in Settings
+	// settings?.email && { label: labels.email ?? 'Email', value: settings.email, href: `mailto:${settings.email}` },
 	settings?.phone && { label: labels.phone ?? 'Phone', value: settings.phone, href: `tel:${settings.phone.replace(/\s/g, '')}` },
 	settings?.address && { label: labels.address ?? 'Address', value: settings.address },
 ].filter(Boolean) as { label: string; value: string; href?: string }[];
