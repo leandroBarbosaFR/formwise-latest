@@ -105,7 +105,10 @@ const toggle = [
 							<h3 class="text-base leading-[1.2] font-medium">{plan.name}</h3>
 							{billing(plan).map(({ period, price, details }) => (
 								<div data-period={period} hidden={period !== initial} class="flex flex-col gap-1">
-									<p class="text-[32px] leading-[1.2] font-medium">{price}</p>
+									<p class="flex items-center gap-2 text-[32px] leading-[1.2] font-medium">
+										{price}
+										<span class:list={['text-base font-normal', plan.featured ? 'text-white/60' : 'text-slate']}>TTC</span>
+									</p>
 									{details?.map((line) => (
 										<p class="text-xs leading-[1.4] font-light whitespace-nowrap">{line}</p>
 									))}

@@ -82,8 +82,22 @@ interface Card {
 	panelLabel?: string;
 	panelAmount?: string;
 	panelDetail?: string;
+	panelReply?: string;
 }
 const cards: Card[] = section.cards ?? [];
+
+// Greetings floating around the globe, positioned within the 332×352 card. Not translated on purpose.
+const greetings = [
+	{ text: 'Bonjour', left: 28, top: 84 },
+	{ text: 'Hello', left: 226, top: 72 },
+	{ text: 'Hola', left: 12, top: 168 },
+	{ text: 'Hallo', left: 244, top: 156 },
+	{ text: 'Ciao', left: 30, top: 244 },
+	{ text: 'Olá', left: 248, top: 238 },
+];
+
+// Lines of the AI draft, as a share of the panel width
+const draftLines = ['100%', '92%', '96%', '64%'];
 
 const panel = 'absolute top-1/2 left-1/2 h-[352px] w-[332px] -translate-1/2 overflow-clip rounded-xl bg-white';
 ---
@@ -112,6 +126,102 @@ const panel = 'absolute top-1/2 left-1/2 h-[352px] w-[332px] -translate-1/2 over
 								<img src={img(layer)} alt="" class="absolute inset-0 size-full max-w-none object-cover" />
 							))}
 						</div>
+
+						{card.illustration === 'support' && (
+							<div class:list={[panel, 'flex flex-col gap-5 p-6']}>
+								<div class="flex items-center justify-between gap-3">
+									<p class="type-h4">{card.panelTitle ?? 'Formwise support'}</p>
+									<span class="flex shrink-0 items-center gap-1.5 rounded bg-[#def5dc] px-2 py-1 text-xs leading-[1.3] font-demi text-[#0a8502]">
+										<span class="size-1.5 rounded-full bg-[#0a8502]" />
+										{card.panelLabel ?? 'Online'}
+									</span>
+								</div>
+								<div class="flex flex-1 flex-col justify-center gap-4">
+									<div class="fx-up flex items-end gap-2" style="--i:0">
+										<Avatar size={40} bg={members[3].bg} under={members[3].under} over={members[3].over} />
+										<p class="max-w-[220px] rounded-2xl rounded-bl-sm bg-[#f1f3f6] px-4 py-3 text-sm leading-[1.3]">
+											{card.panelDetail ?? 'How do I import my member list?'}
+										</p>
+									</div>
+									<div class="fx-up flex items-end justify-end gap-2" style="--i:1">
+										<p class="max-w-[220px] rounded-2xl rounded-br-sm bg-brand px-4 py-3 text-sm leading-[1.3] text-white">
+											{card.panelReply ?? 'Hi! Send us your file, we’ll set it up with you today.'}
+										</p>
+										<Avatar size={40} under={members[1].under} over={members[1].over} />
+									</div>
+									<div class="fx-up flex items-end gap-2" style="--i:2">
+										<Avatar size={40} bg={members[3].bg} under={members[3].under} over={members[3].over} />
+										<p class="flex gap-1 rounded-2xl rounded-bl-sm bg-[#f1f3f6] px-4 py-4">
+											{[0, 1, 2].map((dot) => (
+												<span class="fx-typing size-1.5 rounded-full bg-slate" style={`--i:${dot}`} />
+											))}
+										</p>
+									</div>
+								</div>
+							</div>
+						)}
+
+						{card.illustration === 'assistant' && (
+							<div class:list={[panel, 'flex flex-col gap-4 p-6']}>
+								<p class="type-h4">{card.panelTitle ?? 'AI assistant'}</p>
+								<div class="flex flex-1 flex-col justify-center gap-4">
+								<div class="flex items-start gap-2 rounded-xl border border-black/10 p-3">
+									<svg viewBox="0 0 24 24" class="mt-px size-4 shrink-0 text-brand" fill="currentColor" aria-hidden="true">
+										<path d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9L12 2zm7 12l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14z" />
+									</svg>
+									<p class="text-sm leading-[1.3]">{card.panelDetail ?? 'Write the newsletter for our spring gala'}</p>
+								</div>
+								<div class="flex flex-col gap-3 rounded-xl bg-brand-soft/60 p-4">
+									{draftLines.map((width, index) => (
+										<span class="fx-grow h-2 rounded-full bg-brand/20" style={`width:${width};--i:${index}`} />
+									))}
+								</div>
+								<span class="fx-up flex items-center gap-1.5 self-start rounded bg-[#def5dc] px-2 py-1 text-xs leading-[1.3] font-demi text-[#0a8502]" style="--i:4">
+									<svg viewBox="0 0 12 12" class="size-3" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+										<path d="M2.5 6.2l2.3 2.3 4.7-5" stroke-linecap="round" stroke-linejoin="round" />
+									</svg>
+									{card.panelLabel ?? 'Draft ready'}
+								</span>
+								</div>
+							</div>
+						)}
+
+						{card.illustration === 'languages' && (
+							<>
+								<div class={panel}>
+									<img src={img('donation-ellipse-10.svg')} alt="" class="absolute top-1/2 left-[calc(50%-0.33px)] size-[190px] max-w-none -translate-1/2" />
+									<div class="absolute top-0 left-0 h-[304px] w-full bg-linear-to-b from-white/80 to-white/0" />
+									<div class="absolute bottom-0 left-0 h-[304px] w-full bg-linear-to-t from-white/80 to-white/0" />
+									<svg viewBox="0 0 296 296" class="fx-spin-right absolute top-1/2 left-[calc(50%-0.33px)] size-[296px] max-w-none -translate-1/2" aria-hidden="true">
+										<defs>
+											<linearGradient id="lang-ring-middle" x1="0" y1="0" x2="1" y2="1">
+												<stop offset="0" stop-color="#023d9d" stop-opacity="0.55" />
+												<stop offset="0.5" stop-color="#023d9d" stop-opacity="0.06" />
+												<stop offset="1" stop-color="#023d9d" stop-opacity="0.06" />
+											</linearGradient>
+										</defs>
+										<circle cx="148" cy="148" r="147.5" fill="none" stroke="url(#lang-ring-middle)" />
+									</svg>
+									<p class="type-h4 absolute top-6 right-6 left-6">{card.panelTitle ?? 'Languages'}</p>
+									<svg viewBox="0 0 24 24" class="absolute top-1/2 left-[calc(50%-0.33px)] size-[96px] -translate-1/2 text-brand" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true">
+										<circle cx="12" cy="12" r="9.5" />
+										<path d="M2.5 12h19M12 2.5c2.6 2.6 3.9 5.8 3.9 9.5s-1.3 6.9-3.9 9.5c-2.6-2.6-3.9-5.8-3.9-9.5s1.3-6.9 3.9-9.5z" />
+									</svg>
+									{greetings.map((g, index) => (
+										<span
+											class="fx-pop absolute rounded-full border border-black/10 bg-white px-3 py-1 text-sm leading-[1.3] shadow-[0_4px_16px_rgb(2_61_157/0.1)]"
+											style={`left:${g.left}px;top:${g.top}px;--i:${index}`}
+										>
+											{g.text}
+										</span>
+									))}
+								</div>
+								<div class="absolute top-[311px] left-[calc(50%+0.33px)] flex w-[168px] -translate-x-1/2 flex-col items-center gap-0.5 text-center">
+									<p class="text-base leading-[1.2] tracking-[-0.02em]">{card.panelAmount ?? '24 languages'}</p>
+									<p class="type-small text-slate">{card.panelDetail ?? 'Automatic translation'}</p>
+								</div>
+							</>
+						)}
 
 						{card.illustration === 'members' && (
 							<div class:list={[panel, 'flex flex-col gap-4 p-6']}>
@@ -246,7 +356,43 @@ const panel = 'absolute top-1/2 left-1/2 h-[352px] w-[332px] -translate-1/2 over
 		}
 	}
 
-	/* Donations: the rings rotate slowly in opposite directions, on a loop.
+	/* Support: the typing dots bounce on a loop */
+	[data-inview] .fx-typing {
+		animation: fx-typing 1.2s ease-in-out infinite;
+		animation-delay: calc(1.2s + var(--i, 0) * 150ms);
+	}
+	@keyframes fx-typing {
+		0%,
+		60%,
+		100% {
+			transform: none;
+			opacity: 0.4;
+		}
+		30% {
+			transform: translateY(-3px);
+			opacity: 1;
+		}
+	}
+
+	/* AI assistant: the draft lines write themselves from left to right */
+	[data-animate] .fx-grow {
+		transform: scaleX(0);
+		transform-origin: left;
+	}
+	[data-animate][data-inview] .fx-grow {
+		animation: fx-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+		animation-delay: calc(300ms + var(--i, 0) * 180ms);
+	}
+	@keyframes fx-grow {
+		from {
+			transform: scaleX(0);
+		}
+		to {
+			transform: scaleX(1);
+		}
+	}
+
+	/* Donations and languages: the rings rotate slowly in opposite directions, on a loop.
 	   `rotate` composes with Tailwind's `translate`, so the rings stay centred. */
 	[data-inview] .fx-spin-left {
 		animation: fx-spin 24s linear infinite reverse;
