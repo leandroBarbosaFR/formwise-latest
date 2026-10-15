@@ -135,8 +135,9 @@ export const introSection = defineSection({
       description:
         'Labels shown inside the dashboard illustration. Dates, months and amounts are formatted automatically for each language.',
       type: 'object',
+      // Not conditionally hidden: the translate function skips conditional fields and would copy the
+      // French labels into every language
       options: {collapsible: true, collapsed: true},
-      hidden: ({parent}) => parent?.showProductPreview === false,
       fieldsets: DASHBOARD_FIELDSETS.map(({name, title}) => ({name, title, options: {collapsible: true, collapsed: true}})),
       fields: DASHBOARD_FIELDSETS.flatMap(({name: fieldset, labels}) =>
         Object.entries(labels).map(([name, example]) =>
