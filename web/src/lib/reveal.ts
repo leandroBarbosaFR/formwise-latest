@@ -40,7 +40,10 @@ export function initReveals() {
 					stagger: 0.09,
 					// Hidden right away, not only once the trigger is reached (no flash of the final state)
 					immediateRender: true,
-					scrollTrigger: { trigger: heading, start: START, once: true },
+					// Scrolling faster than the 1.1s duration would otherwise leave the lines
+					// stranded mid-animation once the trigger is scrolled past; this snaps them
+					// straight to the finished (visible) state instead.
+					scrollTrigger: { trigger: heading, start: START, once: true, fastScrollEnd: true },
 				}),
 		});
 
@@ -80,6 +83,9 @@ function fadeUp(targets: HTMLElement[], trigger: HTMLElement, delay: number) {
 		delay,
 		stagger: 0.08,
 		immediateRender: true,
-		scrollTrigger: { trigger, start: START, once: true },
+		// Same as the heading lines above: without this, scrolling past faster than the 0.9s
+		// duration leaves the paragraph stranded at whatever opacity it reached, instead of
+		// snapping to fully visible.
+		scrollTrigger: { trigger, start: START, once: true, fastScrollEnd: true },
 	});
 }
