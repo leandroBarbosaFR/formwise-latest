@@ -62,6 +62,13 @@ export function initReveals() {
 		(el) => inScope(el) && !companions.has(el),
 	);
 	marked.forEach((el) => fadeUp([el], el, 0));
+
+	// Every trigger above was positioned using the layout at this exact moment, which is before
+	// the web fonts have necessarily finished loading. A font swap shifts line wraps and heading
+	// heights, so without this, triggers below the shift stay pinned to their stale (pre-swap)
+	// position — in practice some paragraphs' scroll point ends up past where the user already
+	// scrolled, so their once-only reveal never fires and the text is stuck invisible.
+	document.fonts?.ready.then(() => ScrollTrigger.refresh());
 }
 
 function fadeUp(targets: HTMLElement[], trigger: HTMLElement, delay: number) {
