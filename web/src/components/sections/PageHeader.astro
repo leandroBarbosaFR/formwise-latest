@@ -13,15 +13,20 @@ interface Props {
 		backgroundImage?: Section['backgroundImage'];
 	};
 	ctx: SiteContext;
+	// Fill the viewport (the 404 page, which has no footer)
+	fullHeight?: boolean;
 }
-const { section, ctx } = Astro.props;
+const { section, ctx, fullHeight = false } = Astro.props;
 const { eyebrow, heading, text, backgroundImage } = section;
 ---
 
 <header id={section.anchorId ?? 'top'} class="p-6">
 	<div class="@container">
 		<div
-			class="relative flex min-h-[480px] flex-col items-center justify-center overflow-clip rounded-xl bg-brand px-6 pt-32 pb-24 text-center text-white [--u:calc(100cqw/1392)] lg:min-h-[560px]"
+			class:list={[
+				'relative flex min-h-[480px] flex-col items-center justify-center overflow-clip rounded-xl bg-brand px-6 pt-32 pb-24 text-center text-white [--u:calc(100cqw/1392)] lg:min-h-[560px]',
+				fullHeight && 'h-[calc(100vh-3rem)]',
+			]}
 		>
 			{
 				hasImage(backgroundImage) ? (

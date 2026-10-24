@@ -10,7 +10,7 @@ const strings = ctx.layout.settings?.strings ?? {};
 ---
 
 <Layout ctx={ctx} title={strings.notFoundTitle} seo={{ noIndex: true }} footer={false}>
-	<PageHeader section={{ eyebrow: '404', heading: strings.notFoundTitle, text: strings.notFoundText }} ctx={ctx}>
+	<PageHeader section={{ eyebrow: '404', heading: strings.notFoundTitle, text: strings.notFoundText }} ctx={ctx} fullHeight>
 		<a
 			href={homePath(BASE_LANGUAGE)}
 			class="glass rounded-full px-6 py-[17px] text-sm leading-[1.2] tracking-[-0.02em] text-white [text-box:trim-both_cap_alphabetic]"
