@@ -7,12 +7,16 @@ interface Props {
 const { section } = Astro.props;
 const words: string[] = section.words ?? [];
 
-// One scroll step per Figma frame: lift the eyebrow, bring in each word (the footnote rides up with
-// the last one), then settle the footnote. Steps for a missing eyebrow or footnote are skipped.
+// One scroll step per Figma frame: bring in each word (the eyebrow lifts with the first one, the
+// footnote rides up with the last one), then settle the footnote, skipped when there is none.
 // Plus one step of rest at the end, so the finished list stays before the page glides on.
 const STEP_SVH = 40;
-const steps = (section.eyebrow ? 1 : 0) + words.length + (section.footnote ? 1 : 0);
-const trackHeight = `calc(100svh + ${(steps + 1) * STEP_SVH}svh)`;
+// The words start coming in once the top of the section reaches the middle of the screen, not only
+// once it is pinned, so that first half screen of scroll is part of the animation (keep in sync
+// with START in the script below)
+const LEAD_SVH = 50;
+const steps = words.length + (section.footnote ? 1 : 0);
+const trackHeight = `calc(100svh + ${(steps + 1) * STEP_SVH - LEAD_SVH}svh)`;
 ---
 
 <!--
@@ -60,6 +64,8 @@ const trackHeight = `calc(100svh + ${(steps + 1) * STEP_SVH}svh)`;
 	const EXIT_DISTANCE = 1350; // frame 9: the section has moved 1350 up, showing half of the next one
 	// Once all the text is in, the page moves on with Ease in and out over 1600ms (Figma)
 	const EXIT_MS = 1600;
+	// The timeline starts when the top of the section reaches the middle of the screen (LEAD_SVH above)
+	const START = 'top 50%';
 	// Words rise faded and turn solid as they land in the stack
 	const FADED = 0.3;
 
@@ -76,12 +82,12 @@ const trackHeight = `calc(100svh + ${(steps + 1) * STEP_SVH}svh)`;
 		// when mobile browser bars show or hide; offsetTop ignores transforms. Re-read on every refresh.
 		const rise = () => panel.offsetHeight + BELOW_FOLD - items[0].offsetTop;
 
-		// One timeline unit per Figma frame, in the same order as the steps in the markup: lift the
-		// eyebrow, bring in each word (the footnote rides up with the last one), settle the footnote,
-		// then one unit of rest so the finished list stays before the page glides on
+		// One timeline unit per Figma frame, in the same order as the steps in the markup: bring in
+		// each word (the eyebrow lifts with the first one, the footnote rides up with the last one),
+		// settle the footnote, then one unit of rest so the finished list stays before the page glides on
 		const timeline = gsap.timeline({ defaults: { duration: 1 } });
 		let at = 0;
-		if (eyebrow) timeline.fromTo(eyebrow, { y: EYEBROW_LIFT }, { y: 0, ease: 'power2.out' }, at++);
+		if (eyebrow) timeline.fromTo(eyebrow, { y: EYEBROW_LIFT }, { y: 0, ease: 'power2.out' }, at);
 		items.forEach((item, i) => {
 			// Rises quickly then eases into its slot, staying faded until it is nearly there
 			timeline
@@ -96,11 +102,11 @@ const trackHeight = `calc(100svh + ${(steps + 1) * STEP_SVH}svh)`;
 		const steps = at;
 		timeline.to({}, {}, at);
 
-		// The track (set in the markup) is 100svh plus one step of scroll per unit; the panel inside it
-		// is sticky, so the timeline simply follows the scroll from the track's top to its bottom
+		// The track (set in the markup) is sized so there is one step of scroll per unit between START
+		// and its bottom; the panel inside it is sticky, so the timeline simply follows the scroll
 		const trigger = ScrollTrigger.create({
 			trigger: track,
-			start: 'top top',
+			start: START,
 			end: 'bottom bottom',
 			animation: timeline,
 			scrub: SCRUB,
@@ -122,7 +128,7 @@ const trackHeight = `calc(100svh + ${(steps + 1) * STEP_SVH}svh)`;
 			if (gliding && SCROLL_KEYS.has(event.key)) event.preventDefault();
 		});
 		// Re-arm once the visitor scrolls back into the section
-		ScrollTrigger.create({ trigger: track, start: 'top top', end: 'bottom bottom', onEnterBack: () => (armed = true) });
+		ScrollTrigger.create({ trigger: track, start: START, end: 'bottom bottom', onEnterBack: () => (armed = true) });
 
 		function maybeGlide() {
 			// Only when the finished list is showing, not when one fast scroll flew through the words

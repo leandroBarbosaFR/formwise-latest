@@ -414,7 +414,9 @@ const panel = 'absolute top-1/2 left-1/2 h-[352px] w-[332px] -translate-1/2 over
 					(entry.target as HTMLElement).dataset.inview = '';
 					observer.unobserve(entry.target);
 				}),
-			{ threshold: 0.35 },
+			// Same trigger line as the heading reveals (top of the card 15% above the bottom of the
+			// screen), so the cards start right after the title instead of a long scroll later
+			{ rootMargin: '0px 0px -15% 0px', threshold: 0 },
 		);
 		cards.forEach((card) => observer.observe(card));
 	}
