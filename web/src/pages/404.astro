@@ -9,7 +9,7 @@ const ctx = await getSiteContext(BASE_LANGUAGE, {});
 const strings = ctx.layout.settings?.strings ?? {};
 ---
 
-<Layout ctx={ctx} title={strings.notFoundTitle} seo={{ noIndex: true }}>
+<Layout ctx={ctx} title={strings.notFoundTitle} seo={{ noIndex: true }} footer={false}>
 	<PageHeader section={{ eyebrow: '404', heading: strings.notFoundTitle, text: strings.notFoundText }} ctx={ctx}>
 		<a
 			href={homePath(BASE_LANGUAGE)}

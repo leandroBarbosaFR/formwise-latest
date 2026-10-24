@@ -19,9 +19,11 @@ interface Props {
 	article?: { publishedTime?: string; modifiedTime?: string; author?: string; section?: string };
 	// Page-specific structured data, added to the site-wide Organization and WebSite
 	jsonLd?: Record<string, unknown>[];
+	// Hide the site footer (the 404 page has none)
+	footer?: boolean;
 }
 // stegaClean: the <head> never gets click-to-edit markers (only previews have them)
-const { ctx, ...meta } = Astro.props;
+const { ctx, footer = true, ...meta } = Astro.props;
 const { title, seo, type = 'website', article, jsonLd = [] } = stegaClean(meta);
 const { settings } = ctx.layout;
 const defaults = settings?.seo ?? {};
@@ -187,7 +189,7 @@ const cookiesVersion = (
 			{settings?.strings?.skipToContent ?? 'Skip to content'}
 		</a>
 		<slot />
-		<Footer ctx={ctx} />
+		{footer && <Footer ctx={ctx} />}
 
 		<script>
 			import { initReveals } from '../lib/reveal';
