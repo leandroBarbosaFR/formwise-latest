@@ -65,7 +65,9 @@ export function initTracking() {
 		} catch {
 			return;
 		}
-		if (url.host !== APP_HOST) return;
+		// The app itself, or the /register and /login shortcuts on the website (redirected to the app)
+		const isAppLink = url.host === APP_HOST || (/(^|\.)formwise\.fr$/.test(url.host) && /\/(register|login)\/?$/.test(url.pathname));
+		if (!isAppLink) return;
 		const isLogin = /\/login/.test(url.pathname);
 		track(isLogin ? 'login_click' : 'sign_up_click', {
 			link_url: url.href,
