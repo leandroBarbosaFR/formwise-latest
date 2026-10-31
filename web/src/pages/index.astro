@@ -1,25 +1,10 @@
 ---
-import { getLanguages } from '../lib/data';
 import { BASE_LANGUAGE } from '../lib/languages';
 
-// This page is cached once for every visitor, so the browser (not the server) picks the language
-const languages = await getLanguages();
+// French is the default language. The root URL always sends visitors and search engines to /fr/
+// with a permanent redirect (also declared in vercel.json, which answers before this page runs).
+// No guessing from the browser language: Googlebot crawls with an English browser, so a
+// language-based redirect made Google treat /en/ as the home page. Visitors switch language
+// with the language switcher.
+return Astro.redirect(`/${BASE_LANGUAGE}/`, 301);
 ---
-
-<html lang={BASE_LANGUAGE}>
-	<head>
-		<meta charset="utf-8" />
-		<meta name="robots" content="noindex" />
-		<meta http-equiv="refresh" content={`1; url=/${BASE_LANGUAGE}/`} />
-		<link rel="canonical" href={`/${BASE_LANGUAGE}/`} />
-		<title>Formwise</title>
-		<script is:inline define:vars={{ languages, fallback: BASE_LANGUAGE }}>
-			const preferred = (navigator.languages ?? [navigator.language]).map((l) => l.slice(0, 2).toLowerCase());
-			const match = preferred.find((l) => languages.includes(l)) ?? fallback;
-			location.replace(`/${match}/`);
-		</script>
-	</head>
-	<body>
-		<a href={`/${BASE_LANGUAGE}/`}>Formwise</a>
-	</body>
-</html>

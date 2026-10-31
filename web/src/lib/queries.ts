@@ -139,5 +139,7 @@ export const LLMS_QUERY = defineQuery(`{
 		title, "slug": slug.current, excerpt, publishedAt
 	},
 	"plans": *[_type == "plan" && language == $lang]{name, monthlyPrice, monthlyPriceDetails, price, priceDetails, description, features, featured} | order(featured desc),
-	"faqs": *[_type == "faq" && language == $lang]{question, answer}
+	"faqs": *[_type == "faq" && language == $lang]{question, answer},
+	// Feature summary shown on the home page
+	"highlights": *[_id == $homeId][0].sections[_type == "highlightsSection"][0].items[]{title, text}
 }`);

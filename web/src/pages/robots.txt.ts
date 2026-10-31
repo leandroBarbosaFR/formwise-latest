@@ -20,11 +20,13 @@ const AI_CRAWLERS = [
 ];
 
 export const GET: APIRoute = () => {
+	// API routes (contact form, preview mode) have nothing to index
+	const rules = ['Allow: /', 'Disallow: /api/'];
 	const lines = [
 		'User-agent: *',
-		'Allow: /',
+		...rules,
 		'',
-		...AI_CRAWLERS.flatMap((bot) => [`User-agent: ${bot}`, 'Allow: /', '']),
+		...AI_CRAWLERS.flatMap((bot) => [`User-agent: ${bot}`, ...rules, '']),
 		`Sitemap: ${absoluteUrl('/sitemap.xml')}`,
 		'',
 	];

@@ -97,6 +97,8 @@ const field =
 </section>
 
 <script>
+	import { leadSource, track } from '../../lib/tracking';
+
 	// Sent in the background (our /api/contact route or a form service such as Formspree),
 	// so the visitor stays on the page
 	document.querySelectorAll<HTMLFormElement>('[data-contact-form]').forEach((form) => {
@@ -108,13 +110,28 @@ const field =
 			button?.setAttribute('disabled', '');
 			success?.setAttribute('hidden', '');
 			error?.setAttribute('hidden', '');
+			const body = new FormData(form);
+			// Where the visitor came from (ad, search, campaign), included in the e-mail for the leads sheet
+			const source = leadSource();
+			if (form.action.includes('/api/contact')) {
+				body.set('page', location.pathname);
+				for (const [key, value] of Object.entries(source)) if (value) body.set(key, value);
+			}
 			const response = await fetch(form.action, {
 				method: 'POST',
-				body: new FormData(form),
+				body,
 				headers: { Accept: 'application/json' },
 			}).catch(() => null);
 			button?.removeAttribute('disabled');
 			if (response?.ok) {
+				// Google Ads / GA4 conversion (trigger "generate_lead" in Google Tag Manager)
+				track('generate_lead', {
+					form_name: 'contact',
+					page_path: location.pathname,
+					language: document.documentElement.lang,
+					utm_source: source.utm_source,
+					utm_campaign: source.utm_campaign,
+				});
 				form.reset();
 				success?.removeAttribute('hidden');
 			} else {

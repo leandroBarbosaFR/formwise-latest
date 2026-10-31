@@ -7,6 +7,35 @@ import type { APIRoute } from 'astro';
 // - CONTACT_EMAIL_FROM: sender on a domain verified in Resend, e.g. "Formwise <contact@formwise.fr>"
 
 const LIMITS = { name: 200, email: 320, organization: 200, message: 5000, lang: 5 };
+// Lead attribution sent by the form script (see lib/tracking.ts), copied into the leads sheet
+const SOURCE_FIELDS = [
+	['page', 'Page du formulaire'],
+	['landing_page', "Page d'arrivée"],
+	['referrer', 'Site référent'],
+	['utm_source', 'utm_source'],
+	['utm_medium', 'utm_medium'],
+	['utm_campaign', 'utm_campaign'],
+	['utm_term', 'utm_term (mot-clé)'],
+	['utm_content', 'utm_content'],
+	['gclid', 'gclid (clic Google Ads)'],
+	['gbraid', 'gbraid'],
+	['wbraid', 'wbraid'],
+] as const;
+
+// Same channels as the "Source" column of the leads sheet
+function channelOf(source: Record<string, string>) {
+	const utm = (source.utm_source ?? '').toLowerCase();
+	const medium = (source.utm_medium ?? '').toLowerCase();
+	const referrer = (source.referrer ?? '').toLowerCase();
+	if (source.gclid || source.gbraid || source.wbraid || (utm === 'google' && /cpc|ppc|paid/.test(medium))) return 'Google Ads';
+	if (utm.includes('linkedin') || referrer.includes('linkedin')) return 'LinkedIn';
+	if (/facebook|instagram|meta/.test(utm + referrer)) return 'Réseaux sociaux';
+	if (medium === 'email' || utm.includes('newsletter')) return 'E-mail';
+	if (/chatgpt|openai|perplexity|claude|gemini|copilot|mistral/.test(utm + referrer)) return 'IA (ChatGPT, Perplexity…)';
+	if (/google|bing|duckduckgo|qwant|ecosia|yahoo/.test(referrer)) return 'Recherche Google (SEO)';
+	if (referrer) return 'Site référent';
+	return 'Direct';
+}
 
 const reply = (status: number, body: Record<string, unknown>) =>
 	new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -34,6 +63,13 @@ export const POST: APIRoute = async ({ request }) => {
 	const lang = field('lang');
 	if (!name || !message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return reply(400, { error: 'invalid' });
 
+	const source: Record<string, string> = {};
+	for (const [key] of SOURCE_FIELDS) {
+		const value = String(form.get(key) ?? '').trim().slice(0, 300);
+		if (value) source[key] = value;
+	}
+	const channel = channelOf(source);
+
 	const response = await fetch('https://api.resend.com/emails', {
 		method: 'POST',
 		headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -41,7 +77,7 @@ export const POST: APIRoute = async ({ request }) => {
 			from,
 			to: [to],
 			reply_to: email,
-			subject: `Nouveau message de ${name}${organization ? ` (${organization})` : ''}`,
+			subject: `[Lead · ${channel}] ${name}${organization ? ` (${organization})` : ''}`,
 			text: [
 				`Nom : ${name}`,
 				`E-mail : ${email}`,
@@ -49,6 +85,26 @@ export const POST: APIRoute = async ({ request }) => {
 				...(lang ? [`Langue du site : ${lang}`] : []),
 				'',
 				message,
+				'',
+				'— Origine du contact —',
+				`Source : ${channel}`,
+				...SOURCE_FIELDS.filter(([key]) => source[key]).map(([key, label]) => `${label} : ${source[key]}`),
+				'',
+				// Tab-separated line: paste it into the "Leads" tab of the leads spreadsheet
+				'Ligne pour le fichier des leads (à coller dans l’onglet Leads) :',
+				[
+					new Date().toISOString().slice(0, 10),
+					name,
+					email,
+					organization,
+					channel,
+					source.utm_campaign ?? '',
+					source.utm_term ?? '',
+					source.landing_page ?? source.page ?? '',
+					lang,
+				]
+					.map((value) => value.replace(/[\t\n]/g, ' '))
+					.join('\t'),
 			].join('\n'),
 		}),
 	}).catch(() => null);
