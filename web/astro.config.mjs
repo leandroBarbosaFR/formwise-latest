@@ -16,8 +16,10 @@ const { PUBLIC_SANITY_PROJECT_ID, PUBLIC_SANITY_DATASET, SANITY_PREVIEW_SECRET }
 
 // https://astro.build/config
 export default defineConfig({
-	// Production domain, used for canonical and hreflang URLs
-	site: 'https://formwise.fr',
+	// Production domain, used for canonical and hreflang URLs. Must be the host that actually serves
+	// the pages (formwise.fr redirects to www), otherwise every canonical points at a redirect.
+	// Keep in sync with SITE_URL in src/lib/seo.ts.
+	site: 'https://www.formwise.fr',
 	// One URL per page (/en/about/), so search engines never see duplicates
 	trailingSlash: 'always',
 	// Pages are rendered on Vercel when visited and cached (ISR). Whatever is published in Sanity

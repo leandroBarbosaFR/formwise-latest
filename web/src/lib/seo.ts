@@ -4,7 +4,8 @@ import { blogPath, homePath } from './links';
 import { urlFor } from './sanity';
 import type { Page, Post, RichText, Section } from './types';
 
-export const SITE_URL = 'https://formwise.fr';
+// The host that serves the pages (formwise.fr redirects here). Keep in sync with `site` in astro.config.mjs.
+export const SITE_URL = 'https://www.formwise.fr';
 export const absoluteUrl = (path: string) => new URL(path, SITE_URL).href;
 
 // Open Graph locales (language_TERRITORY) for the 24 EU languages
@@ -23,9 +24,16 @@ const organizationId = `${SITE_URL}/#organization`;
 const websiteId = (lang: string) => `${absoluteUrl(homePath(lang))}#website`;
 
 // Organization and WebSite: on every page, referenced by the page-level graph
+// Placeholder contact details from the starter content (hello@example.com) must never reach
+// search engines or AI assistants
+export const realEmail = (email?: string) => (email && !/@example\.(com|org|net)$/i.test(email) ? email : undefined);
+
+// Organization and WebSite: on every page, referenced by the page-level graph
 export function siteGraph(ctx: SiteContext): JsonLd[] {
 	const { settings } = ctx.layout;
 	const name = settings?.siteName ?? 'Formwise';
+	const email = realEmail(settings?.email);
+	const sameAs = settings?.socialLinks?.map((social) => social.url).filter(Boolean);
 	return [
 		{
 			'@type': 'Organization',
@@ -34,9 +42,22 @@ export function siteGraph(ctx: SiteContext): JsonLd[] {
 			url: SITE_URL,
 			logo: { '@type': 'ImageObject', url: absoluteUrl('/favicon/web-app-manifest-512x512.png'), width: 512, height: 512 },
 			description: settings?.siteDescription,
-			email: settings?.email,
+			email,
 			telephone: settings?.phone,
-			sameAs: settings?.socialLinks?.map((social) => social.url),
+			address: settings?.address ? { '@type': 'PostalAddress', streetAddress: settings.address, addressCountry: 'FR' } : undefined,
+			areaServed: [{ '@type': 'Country', name: 'France' }, { '@type': 'Place', name: 'European Union' }],
+			knowsLanguage: ctx.languages,
+			contactPoint:
+				email || settings?.phone
+					? {
+							'@type': 'ContactPoint',
+							contactType: 'customer support',
+							email,
+							telephone: settings?.phone,
+							availableLanguage: ['fr', 'en'],
+						}
+					: undefined,
+			sameAs: sameAs?.length ? sameAs : undefined,
 		},
 		{
 			'@type': 'WebSite',
@@ -86,25 +107,54 @@ function faqPage(sections: Section[], url: string): JsonLd | undefined {
 	};
 }
 
+interface PlanData {
+	name: string;
+	price: string;
+	monthlyPrice?: string;
+	description?: string;
+	features?: string[];
+}
+
 function softwareApplication(ctx: SiteContext, sections: Section[], url: string): JsonLd | undefined {
-	const plans = sections.flatMap((s) => (s.plans ?? []).filter(Boolean));
+	const plans: PlanData[] = sections.flatMap((s) => (s.plans ?? []).filter(Boolean));
 	if (!plans.length) return undefined;
-	const offers = plans
-		.map((plan: { name: string; price: string; description?: string }) => {
-			const price = parsePrice(plan.price);
-			return price && { '@type': 'Offer', name: plan.name, description: plan.description, ...price, url: `${url}#pricing` };
-		})
-		.filter(Boolean);
+	const offer = (plan: PlanData, value: string | undefined, unit: 'MON' | 'ANN') => {
+		const price = value ? parsePrice(value) : undefined;
+		if (!price) return undefined;
+		return {
+			'@type': 'Offer',
+			name: `${plan.name} (${unit === 'MON' ? 'mensuel' : 'annuel'})`,
+			description: plan.description ?? plan.features?.[0]?.trim(),
+			...price,
+			priceSpecification: {
+				'@type': 'UnitPriceSpecification',
+				...price,
+				valueAddedTaxIncluded: true,
+				referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: unit },
+			},
+			availability: 'https://schema.org/InStock',
+			eligibleRegion: { '@type': 'Place', name: 'European Union' },
+			url: `${url}#pricing`,
+		};
+	};
+	const offers = plans.flatMap((plan) => [offer(plan, plan.monthlyPrice, 'MON'), offer(plan, plan.price, 'ANN')]).filter(Boolean);
+	// Every plan has the same features, so the first plan's list describes the product
+	const featureList = plans[0]?.features?.map((f) => f.trim()).filter((f) => !/\d/.test(f));
 	return {
 		'@type': 'SoftwareApplication',
+		'@id': `${SITE_URL}/#software`,
 		name: ctx.layout.settings?.siteName ?? 'Formwise',
 		applicationCategory: 'BusinessApplication',
+		applicationSubCategory: 'Association management software',
 		operatingSystem: 'Web',
 		description: ctx.layout.settings?.siteDescription,
 		url,
 		inLanguage: ctx.lang,
+		availableLanguage: ctx.languages,
+		audience: { '@type': 'Audience', audienceType: 'Associations loi 1901, clubs sportifs, bénévoles' },
+		featureList: featureList?.length ? featureList : undefined,
 		publisher: { '@id': organizationId },
-		offers,
+		offers: offers.length ? offers : undefined,
 	};
 }
 

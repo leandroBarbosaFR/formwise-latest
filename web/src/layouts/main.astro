@@ -1,5 +1,6 @@
 ---
 import { VisualEditing } from '@sanity/astro/visual-editing';
+import Analytics from '@vercel/analytics/astro';
 import { stegaClean } from '@sanity/client/stega';
 import '../styles/global.css';
 import Footer from '../components/sections/Footer.astro';
@@ -207,6 +208,14 @@ const cookiesVersion = (
 			);
 			document.addEventListener('keydown', (event) => event.key === 'Escape' && closeDropdowns());
 		</script>
+		<script>
+			import { initTracking } from '../lib/tracking';
+
+			// Lead source (UTM, Google Ads click) and conversion events for Google Tag Manager
+			initTracking();
+		</script>
+		<!-- Traffic in Vercel → Analytics: cookieless, so it counts every visit without the consent banner -->
+		{!getPreview() && <Analytics />}
 		<!-- Click-to-edit overlays, only in the Studio's Presentation tab -->
 		<VisualEditing enabled={!!getPreview()} />
 	</body>

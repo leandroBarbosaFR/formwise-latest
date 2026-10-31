@@ -3,6 +3,11 @@
   "trailingSlash": true,
   "redirects": [
     {
+      "source": "/",
+      "destination": "/fr/",
+      "permanent": true
+    },
+    {
       "source": "/app",
       "destination": "https://app.formwise.fr/app",
       "permanent": false
