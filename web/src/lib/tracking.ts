@@ -74,14 +74,47 @@ export function initTracking() {
 			link_text: link.textContent?.trim().slice(0, 100),
 			page_path: location.pathname,
 		});
-		// Pass the campaign on to the app so sign-ups can be attributed there too
-		if (!isLogin) {
-			const source = leadSource();
-			for (const key of PARAMS) {
-				const value = source[key];
-				if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);
-			}
-			link.href = url.href;
+		if (isLogin) return;
+		// Pass the campaign on to the app so sign-ups can be attributed there too, with an id that
+		// links this click to the account created afterwards (both end up in the sign-ups sheet)
+		const source = leadSource();
+		for (const key of PARAMS) {
+			const value = source[key];
+			if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);
 		}
+		const clickId = newClickId();
+		url.searchParams.set('fw_click', clickId);
+		if (source.referrer && !url.searchParams.has('fw_ref')) url.searchParams.set('fw_ref', source.referrer);
+		link.href = url.href;
+		logSignUpClick({
+			click_id: clickId,
+			page: location.pathname,
+			button: link.textContent?.trim().slice(0, 100) ?? '',
+			tier: url.searchParams.get('tier') ?? '',
+			plan: url.searchParams.get('plan') ?? '',
+			language: document.documentElement.lang,
+			...source,
+		});
 	});
+}
+
+function newClickId() {
+	try {
+		return crypto.randomUUID();
+	} catch {
+		return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+	}
+}
+
+// Anonymous row in the "Clics Essai gratuit" sheet (see pages/api/signup-click.ts). sendBeacon
+// survives the navigation to the app; nothing personal is sent, only where the visit came from.
+function logSignUpClick(data: Record<string, string>) {
+	try {
+		const body = new Blob([JSON.stringify(data)], { type: 'application/json' });
+		if (!navigator.sendBeacon?.('/api/signup-click', body)) {
+			fetch('/api/signup-click', { method: 'POST', body, keepalive: true }).catch(() => {});
+		}
+	} catch {
+		// Best effort: never block the visitor on their way to the trial
+	}
 }
