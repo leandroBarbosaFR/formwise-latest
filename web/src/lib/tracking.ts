@@ -65,10 +65,13 @@ export function initTracking() {
 		} catch {
 			return;
 		}
-		// The app itself, or the /register and /login shortcuts on the website (redirected to the app)
-		const isAppLink = url.host === APP_HOST || (/(^|\.)formwise\.fr$/.test(url.host) && /\/(register|login)\/?$/.test(url.pathname));
-		if (!isAppLink) return;
-		const isLogin = /\/login/.test(url.pathname);
+		// Only the sign-up and log-in pages of the app (or their /register and /login shortcuts on the
+		// website). Other app links, such as a client association's public page shown in a testimonial
+		// (app.formwise.fr/app/<slug>), are not a free-trial click and must not be logged as one.
+		const isFormwiseHost = url.host === APP_HOST || /(^|\.)formwise\.fr$/.test(url.host);
+		const isSignUp = isFormwiseHost && /\/register\/?$/.test(url.pathname);
+		const isLogin = isFormwiseHost && /\/login\/?$/.test(url.pathname);
+		if (!isSignUp && !isLogin) return;
 		track(isLogin ? 'login_click' : 'sign_up_click', {
 			link_url: url.href,
 			link_text: link.textContent?.trim().slice(0, 100),
