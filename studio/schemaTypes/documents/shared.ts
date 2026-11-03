@@ -33,6 +33,13 @@ export const testimonialType = defineType({
     defineField({name: 'name', type: 'string', validation: (rule) => rule.required()}),
     defineField({name: 'role', description: 'e.g. "President, Association Lumière"', type: 'string'}),
     defineField({
+      name: 'website',
+      title: 'Website',
+      description: 'Optional. If set, the person\'s name links to this URL.',
+      type: 'url',
+      validation: (rule) => rule.uri({scheme: ['http', 'https']}),
+    }),
+    defineField({
       name: 'avatar',
       description: 'Photo of the person, shown as a small round image next to their name',
       type: 'image',

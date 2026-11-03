@@ -27,8 +27,9 @@ const SECTIONS = `sections[]{
 	_type == "testimonialsSection" => {
 		"testimonials": testimonials[]{...${localizedItem}{
 			_id, quote, name, role, rating,
-			// The photo is the same in every language, so use the one added to any version of the testimonial
-			"avatar": coalesce(avatar, *[_type == "translation.metadata" && references(^._id)][0].translations[defined(value->avatar.asset)][0].value->avatar)
+			// The photo and website are the same in every language, so use the one added to any version of the testimonial
+			"avatar": coalesce(avatar, *[_type == "translation.metadata" && references(^._id)][0].translations[defined(value->avatar.asset)][0].value->avatar),
+			"website": coalesce(website, *[_type == "translation.metadata" && references(^._id)][0].translations[defined(value->website)][0].value->website)
 		}}
 	},
 	_type == "pricingSection" => {

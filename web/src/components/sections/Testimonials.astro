@@ -7,9 +7,15 @@ interface Props {
 	section: Section;
 }
 const { section } = Astro.props;
-const testimonials: { _id: string; quote: string; name: string; role?: string; rating?: number; avatar?: SanityImage }[] = (
-	section.testimonials ?? []
-).filter(Boolean);
+const testimonials: {
+	_id: string;
+	quote: string;
+	name: string;
+	role?: string;
+	rating?: number;
+	avatar?: SanityImage;
+	website?: string;
+}[] = (section.testimonials ?? []).filter(Boolean);
 ---
 
 <section id={section.anchorId} class="mx-auto flex max-w-[1440px] flex-col items-center gap-8 px-6 py-20 lg:py-[120px]">
@@ -42,7 +48,18 @@ const testimonials: { _id: string; quote: string; name: string; role?: string; r
 							/>
 						)}
 						<div class="flex flex-col gap-1">
-							<p class="text-lg leading-[1.2] tracking-[-0.02em]">{t.name}</p>
+							{t.website ? (
+								<a
+									href={t.website}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="text-lg leading-[1.2] tracking-[-0.02em] underline-offset-2 hover:underline"
+								>
+									{t.name}
+								</a>
+							) : (
+								<p class="text-lg leading-[1.2] tracking-[-0.02em]">{t.name}</p>
+							)}
 							{t.role && <p class="type-small text-slate">{t.role}</p>}
 						</div>
 					</figcaption>
