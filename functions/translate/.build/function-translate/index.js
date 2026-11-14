@@ -1,108 +1,22 @@
 import { randomUUID } from "node:crypto";
 import { documentEventHandler } from "@sanity/functions";
 import { createClient } from "@sanity/client";
-//#region functions/translate/index.ts
+// functions/translate/index.ts
 var SCHEMA_ID = "_.schemas.default";
 var PUBLISH_TRANSLATIONS = true;
 var BASE_LANGUAGE = {
 	id: "fr",
 	title: "French"
 };
-var TARGET_LANGUAGES = [
-	{
-		id: "en",
-		title: "English"
-	},
-	{
-		id: "bg",
-		title: "Bulgarian"
-	},
-	{
-		id: "cs",
-		title: "Czech"
-	},
-	{
-		id: "da",
-		title: "Danish"
-	},
-	{
-		id: "de",
-		title: "German"
-	},
-	{
-		id: "el",
-		title: "Greek"
-	},
-	{
-		id: "es",
-		title: "Spanish"
-	},
-	{
-		id: "et",
-		title: "Estonian"
-	},
-	{
-		id: "fi",
-		title: "Finnish"
-	},
-	{
-		id: "ga",
-		title: "Irish"
-	},
-	{
-		id: "hr",
-		title: "Croatian"
-	},
-	{
-		id: "hu",
-		title: "Hungarian"
-	},
-	{
-		id: "it",
-		title: "Italian"
-	},
-	{
-		id: "lt",
-		title: "Lithuanian"
-	},
-	{
-		id: "lv",
-		title: "Latvian"
-	},
-	{
-		id: "mt",
-		title: "Maltese"
-	},
-	{
-		id: "nl",
-		title: "Dutch"
-	},
-	{
-		id: "pl",
-		title: "Polish"
-	},
-	{
-		id: "pt",
-		title: "Portuguese"
-	},
-	{
-		id: "ro",
-		title: "Romanian"
-	},
-	{
-		id: "sk",
-		title: "Slovak"
-	},
-	{
-		id: "sl",
-		title: "Slovenian"
-	},
-	{
-		id: "sv",
-		title: "Swedish"
-	}
-];
-var CONCURRENCY = 4;
+var TARGET_LANGUAGES = [{
+	id: "en",
+	title: "English"
+}, {
+	id: "es",
+	title: "Spanish"
+}];
+var STYLE_GUIDE = "Formwise is software for associations, clubs and non-profits. Warm, clear and professional tone. Keep the product name Formwise, URLs and currency formats unchanged. Address the reader with the formal form where the language has one (usted in Spanish), consistently throughout.";
+var CONCURRENCY = 2;
 var SINGLETON_TYPES = [
 	"settings",
 	"header",
@@ -148,6 +62,7 @@ var handler = documentEventHandler(async ({ context, event }) => {
 		translations: [translationEntry(BASE_LANGUAGE.id, _id, _type, false)]
 	}))._id;
 	else if (metadataId && !existing.has(BASE_LANGUAGE.id)) await client.patch(metadataId).setIfMissing({ translations: [] }).append("translations", [translationEntry(BASE_LANGUAGE.id, _id, _type, false)]).commit();
+	const sourceSlug = isSingleton ? void 0 : await client.fetch(`*[_id == $id][0].slug`, { id: _id });
 	async function translateInto(language) {
 		let targetId = isSingleton ? `${_type}-${language.id}` : existing.get(language.id);
 		const isNew = !targetId;
@@ -156,8 +71,10 @@ var handler = documentEventHandler(async ({ context, event }) => {
 		await client.createIfNotExists({
 			_id: writeId,
 			_type,
-			language: language.id
+			language: language.id,
+			...sourceSlug && { slug: sourceSlug }
 		});
+		if (sourceSlug) await client.patch(writeId).setIfMissing({ slug: sourceSlug }).commit();
 		if (isNew && metadataId) await client.patch(metadataId).append("translations", [translationEntry(language.id, targetId, _type, true)]).commit();
 		await client.agent.action.translate({
 			schemaId: SCHEMA_ID,
@@ -170,7 +87,9 @@ var handler = documentEventHandler(async ({ context, event }) => {
 			fromLanguage: BASE_LANGUAGE,
 			toLanguage: language,
 			forcePublishedWrite: PUBLISH_TRANSLATIONS,
-			async: true
+			styleGuide: STYLE_GUIDE,
+			target: { exclude: ["slug"] },
+			async: false
 		});
 		return isNew;
 	}
@@ -180,9 +99,8 @@ var handler = documentEventHandler(async ({ context, event }) => {
 		const results = await Promise.all(batch.map(translateInto));
 		added += results.filter(Boolean).length;
 	}
-	console.log(`Queued ${TARGET_LANGUAGES.length} translations of ${_id} (${added} new)`);
+	console.log(`Translated ${_id} into ${TARGET_LANGUAGES.length} languages (${added} new)`);
 });
-//#endregion
 export { handler };
 
 //# sourceMappingURL=index.js.map

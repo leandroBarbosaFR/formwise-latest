@@ -68,6 +68,21 @@
       "permanent": true
     },
     {
+      "source": "/studio",
+      "destination": "https://www.sanity.io/@oGdJmvBH2/studio/aj3gdicmmw61npr7bi79lfy4",
+      "permanent": false
+    },
+    {
+      "source": "/studio/",
+      "destination": "https://www.sanity.io/@oGdJmvBH2/studio/aj3gdicmmw61npr7bi79lfy4",
+      "permanent": false
+    },
+    {
+      "source": "/studio/:path*",
+      "destination": "https://www.sanity.io/@oGdJmvBH2/studio/aj3gdicmmw61npr7bi79lfy4",
+      "permanent": false
+    },
+    {
       "source": "/app",
       "destination": "https://app.formwise.fr/app",
       "permanent": false
