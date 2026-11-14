@@ -8,6 +8,216 @@
       "permanent": true
     },
     {
+      "source": "/fr/about/",
+      "destination": "/fr/a-propos/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/about",
+      "destination": "/fr/a-propos/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/legal-notice/",
+      "destination": "/fr/mentions-legales/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/legal-notice",
+      "destination": "/fr/mentions-legales/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/privacy-policy/",
+      "destination": "/fr/politique-de-confidentialite/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/privacy-policy",
+      "destination": "/fr/politique-de-confidentialite/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/cookie-policy/",
+      "destination": "/fr/politique-cookies/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/cookie-policy",
+      "destination": "/fr/politique-cookies/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/terms-of-service/",
+      "destination": "/fr/conditions-generales-utilisation/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/terms-of-service",
+      "destination": "/fr/conditions-generales-utilisation/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/terms-of-use/",
+      "destination": "/fr/conditions-generales-vente/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/terms-of-use",
+      "destination": "/fr/conditions-generales-vente/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/blog/gdpr-guide-for-associations/",
+      "destination": "/fr/blog/rgpd-association-guide-pratique/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/blog/gdpr-guide-for-associations",
+      "destination": "/fr/blog/rgpd-association-guide-pratique/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/blog/less-time-on-membership-admin/",
+      "destination": "/fr/blog/gestion-adhesions-gagner-du-temps/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/blog/less-time-on-membership-admin",
+      "destination": "/fr/blog/gestion-adhesions-gagner-du-temps/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/blog/formwise-in-24-languages/",
+      "destination": "/fr/blog/formwise-24-langues/",
+      "permanent": true
+    },
+    {
+      "source": "/fr/blog/formwise-in-24-languages",
+      "destination": "/fr/blog/formwise-24-langues/",
+      "permanent": true
+    },
+    {
+      "source": "/en/terms-of-use/",
+      "destination": "/en/terms-of-sale/",
+      "permanent": true
+    },
+    {
+      "source": "/en/terms-of-use",
+      "destination": "/en/terms-of-sale/",
+      "permanent": true
+    },
+    {
+      "source": "/es/about/",
+      "destination": "/es/sobre-nosotros/",
+      "permanent": true
+    },
+    {
+      "source": "/es/about",
+      "destination": "/es/sobre-nosotros/",
+      "permanent": true
+    },
+    {
+      "source": "/es/contact/",
+      "destination": "/es/contacto/",
+      "permanent": true
+    },
+    {
+      "source": "/es/contact",
+      "destination": "/es/contacto/",
+      "permanent": true
+    },
+    {
+      "source": "/es/faq/",
+      "destination": "/es/preguntas-frecuentes/",
+      "permanent": true
+    },
+    {
+      "source": "/es/faq",
+      "destination": "/es/preguntas-frecuentes/",
+      "permanent": true
+    },
+    {
+      "source": "/es/legal-notice/",
+      "destination": "/es/aviso-legal/",
+      "permanent": true
+    },
+    {
+      "source": "/es/legal-notice",
+      "destination": "/es/aviso-legal/",
+      "permanent": true
+    },
+    {
+      "source": "/es/privacy-policy/",
+      "destination": "/es/politica-de-privacidad/",
+      "permanent": true
+    },
+    {
+      "source": "/es/privacy-policy",
+      "destination": "/es/politica-de-privacidad/",
+      "permanent": true
+    },
+    {
+      "source": "/es/cookie-policy/",
+      "destination": "/es/politica-de-cookies/",
+      "permanent": true
+    },
+    {
+      "source": "/es/cookie-policy",
+      "destination": "/es/politica-de-cookies/",
+      "permanent": true
+    },
+    {
+      "source": "/es/terms-of-service/",
+      "destination": "/es/condiciones-de-uso/",
+      "permanent": true
+    },
+    {
+      "source": "/es/terms-of-service",
+      "destination": "/es/condiciones-de-uso/",
+      "permanent": true
+    },
+    {
+      "source": "/es/terms-of-use/",
+      "destination": "/es/condiciones-de-venta/",
+      "permanent": true
+    },
+    {
+      "source": "/es/terms-of-use",
+      "destination": "/es/condiciones-de-venta/",
+      "permanent": true
+    },
+    {
+      "source": "/es/blog/gdpr-guide-for-associations/",
+      "destination": "/es/blog/guia-rgpd-asociaciones/",
+      "permanent": true
+    },
+    {
+      "source": "/es/blog/gdpr-guide-for-associations",
+      "destination": "/es/blog/guia-rgpd-asociaciones/",
+      "permanent": true
+    },
+    {
+      "source": "/es/blog/less-time-on-membership-admin/",
+      "destination": "/es/blog/ahorrar-tiempo-gestion-socios/",
+      "permanent": true
+    },
+    {
+      "source": "/es/blog/less-time-on-membership-admin",
+      "destination": "/es/blog/ahorrar-tiempo-gestion-socios/",
+      "permanent": true
+    },
+    {
+      "source": "/es/blog/formwise-in-24-languages/",
+      "destination": "/es/blog/formwise-24-idiomas/",
+      "permanent": true
+    },
+    {
+      "source": "/es/blog/formwise-in-24-languages",
+      "destination": "/es/blog/formwise-24-idiomas/",
+      "permanent": true
+    },
+    {
       "source": "/:lang(bg|cs|da|de|el|et|fi|ga|hr|hu|it|lt|lv|mt|nl|pl|pt|ro|sk|sl|sv)",
       "destination": "/en/",
       "permanent": true
@@ -29,32 +239,32 @@
     },
     {
       "source": "/a-propos",
-      "destination": "/fr/about/",
+      "destination": "/fr/a-propos/",
       "permanent": true
     },
     {
       "source": "/a-propos/",
-      "destination": "/fr/about/",
+      "destination": "/fr/a-propos/",
       "permanent": true
     },
     {
       "source": "/mentions-legales",
-      "destination": "/fr/legal-notice/",
+      "destination": "/fr/mentions-legales/",
       "permanent": true
     },
     {
       "source": "/mentions-legales/",
-      "destination": "/fr/legal-notice/",
+      "destination": "/fr/mentions-legales/",
       "permanent": true
     },
     {
       "source": "/politique-de-confidentialite",
-      "destination": "/fr/privacy-policy/",
+      "destination": "/fr/politique-de-confidentialite/",
       "permanent": true
     },
     {
       "source": "/politique-de-confidentialite/",
-      "destination": "/fr/privacy-policy/",
+      "destination": "/fr/politique-de-confidentialite/",
       "permanent": true
     },
     {
