@@ -31,7 +31,10 @@ const defaults = settings?.seo ?? {};
 
 const siteName = settings?.siteName ?? 'Formwise';
 const pageTitle = seo?.title ?? title;
-const fullTitle = pageTitle && pageTitle !== siteName ? `${pageTitle} · ${siteName}` : siteName;
+// The brand is appended only when the title stays within the ~60 characters search engines show,
+// and never twice
+const branded = pageTitle ? `${pageTitle} · ${siteName}` : siteName;
+const fullTitle = !pageTitle || pageTitle === siteName ? siteName : pageTitle.includes(siteName) || branded.length > 60 ? pageTitle : branded;
 const description = seo?.description ?? defaults.description ?? settings?.siteDescription;
 const image = seo?.image ?? defaults.image;
 const noIndex = seo?.noIndex ?? defaults.noIndex;

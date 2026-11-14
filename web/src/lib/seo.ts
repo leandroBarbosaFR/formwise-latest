@@ -87,6 +87,9 @@ function parsePrice(value: string) {
 	return Number.isFinite(amount) && currency ? { price: amount, priceCurrency: currency } : undefined;
 }
 
+// Slug of the About page in each language
+const ABOUT_SLUGS = ['a-propos', 'about', 'sobre-nosotros'];
+
 const sectionsOf = (page: Page, type: string) => (page.sections ?? []).filter((s) => s._type === type);
 
 function faqPage(sections: Section[], url: string): JsonLd | undefined {
@@ -158,7 +161,13 @@ function softwareApplication(ctx: SiteContext, sections: Section[], url: string)
 export function pageGraph(ctx: SiteContext, page: Page, path: string, kind: 'home' | 'blog' | 'page'): JsonLd[] {
 	const url = absoluteUrl(path);
 	const pageType =
-		kind === 'blog' ? 'CollectionPage' : page.slug === 'about' ? 'AboutPage' : page.slug === 'contact' ? 'ContactPage' : 'WebPage';
+		kind === 'blog'
+			? 'CollectionPage'
+			: ABOUT_SLUGS.includes(page.slug)
+				? 'AboutPage'
+				: sectionsOf(page, 'contactSection').length
+					? 'ContactPage'
+					: 'WebPage';
 	const graph: (JsonLd | undefined)[] = [
 		{
 			'@type': pageType,
