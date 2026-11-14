@@ -87,14 +87,16 @@ const toggle = [
 						plan.featured ? 'bg-brand text-white' : 'border border-black/10 bg-white text-black',
 					]}
 				>
+					{/* Covers the whole card whatever its height: a fixed 578px layer stopped short of the
+					    bottom on plans with many features. The texture keeps its Figma size in px. */}
 					{plan.featured && (
-						<div class="absolute top-[-16px] left-[-22px] h-[578px] w-[378px]" aria-hidden="true">
-							<img src="/figma/hero-bg-1.webp" alt="" class="absolute inset-0 size-full max-w-none" />
+						<div class="absolute -inset-x-[22px] -top-4 bottom-0" aria-hidden="true">
+							<img src="/figma/hero-bg-1.webp" alt="" class="absolute inset-0 size-full max-w-none object-cover" />
 							<div class="absolute inset-0 overflow-hidden">
 								<img
 									src="/figma/hero-bg-2.webp"
 									alt=""
-									class="absolute top-[-0.06%] left-[-236.64%] h-[294.23%] w-[573.02%] max-w-none"
+									class="absolute top-0 left-[-894px] h-[1700px] w-[2166px] max-w-none"
 								/>
 							</div>
 						</div>
