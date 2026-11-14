@@ -1,31 +1,11 @@
-// The 24 official EU languages. Keep in sync with studio/languages.ts.
+// The languages the website is published in. Keep in sync with studio/languages.ts and
+// functions/translate/index.ts. Pages of removed languages are redirected in vercel.json.
 export const BASE_LANGUAGE = 'fr';
 
 export const LANGUAGES = [
 	{ id: 'fr', title: 'French', native: 'Français' },
 	{ id: 'en', title: 'English', native: 'English' },
-	{ id: 'bg', title: 'Bulgarian', native: 'Български' },
-	{ id: 'cs', title: 'Czech', native: 'Čeština' },
-	{ id: 'da', title: 'Danish', native: 'Dansk' },
-	{ id: 'de', title: 'German', native: 'Deutsch' },
-	{ id: 'el', title: 'Greek', native: 'Ελληνικά' },
 	{ id: 'es', title: 'Spanish', native: 'Español' },
-	{ id: 'et', title: 'Estonian', native: 'Eesti' },
-	{ id: 'fi', title: 'Finnish', native: 'Suomi' },
-	{ id: 'ga', title: 'Irish', native: 'Gaeilge' },
-	{ id: 'hr', title: 'Croatian', native: 'Hrvatski' },
-	{ id: 'hu', title: 'Hungarian', native: 'Magyar' },
-	{ id: 'it', title: 'Italian', native: 'Italiano' },
-	{ id: 'lt', title: 'Lithuanian', native: 'Lietuvių' },
-	{ id: 'lv', title: 'Latvian', native: 'Latviešu' },
-	{ id: 'mt', title: 'Maltese', native: 'Malti' },
-	{ id: 'nl', title: 'Dutch', native: 'Nederlands' },
-	{ id: 'pl', title: 'Polish', native: 'Polski' },
-	{ id: 'pt', title: 'Portuguese', native: 'Português' },
-	{ id: 'ro', title: 'Romanian', native: 'Română' },
-	{ id: 'sk', title: 'Slovak', native: 'Slovenčina' },
-	{ id: 'sl', title: 'Slovenian', native: 'Slovenščina' },
-	{ id: 'sv', title: 'Swedish', native: 'Svenska' },
 ] as const;
 
 export type LanguageId = (typeof LANGUAGES)[number]['id'];

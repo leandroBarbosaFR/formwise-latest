@@ -8,12 +8,8 @@ import type { Page, Post, RichText, Section } from './types';
 export const SITE_URL = 'https://www.formwise.fr';
 export const absoluteUrl = (path: string) => new URL(path, SITE_URL).href;
 
-// Open Graph locales (language_TERRITORY) for the 24 EU languages
-const OG_LOCALES: Record<string, string> = {
-	en: 'en_GB', bg: 'bg_BG', cs: 'cs_CZ', da: 'da_DK', de: 'de_DE', el: 'el_GR', es: 'es_ES', et: 'et_EE',
-	fi: 'fi_FI', fr: 'fr_FR', ga: 'ga_IE', hr: 'hr_HR', hu: 'hu_HU', it: 'it_IT', lt: 'lt_LT', lv: 'lv_LV',
-	mt: 'mt_MT', nl: 'nl_NL', pl: 'pl_PL', pt: 'pt_PT', ro: 'ro_RO', sk: 'sk_SK', sl: 'sl_SI', sv: 'sv_SE',
-};
+// Open Graph locales (language_TERRITORY) for the site's languages
+const OG_LOCALES: Record<string, string> = { fr: 'fr_FR', en: 'en_GB', es: 'es_ES' };
 export const ogLocale = (lang: string) => OG_LOCALES[lang] ?? lang;
 
 const text = (value?: RichText) => (value?.length ? toPlainText(value) : '');
