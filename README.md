@@ -4,7 +4,7 @@
 |---|---|
 | `web/` | Astro website. Every page is built from Sanity content. |
 | `studio/` | Sanity Studio, where content is edited. |
-| `functions/translate/` | Sanity Function that translates published English content into the other 23 EU languages. |
+| `functions/translate/` | Sanity Function that translates published French content into English and Spanish. |
 
 ## Running locally
 

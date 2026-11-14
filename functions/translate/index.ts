@@ -2,8 +2,8 @@ import {randomUUID} from 'node:crypto'
 import {documentEventHandler} from '@sanity/functions'
 import {createClient} from '@sanity/client'
 
-// Translates every published French document into the other 23 official EU languages
-// using Sanity Agent Actions. Keep the language lists in sync with studio/languages.ts.
+// Translates every published French document into English and Spanish using Sanity Agent
+// Actions. Keep the language lists in sync with studio/languages.ts and web/src/lib/languages.ts.
 
 // Deployed schema of the "default" Studio workspace (`npx sanity schema deploy`)
 const SCHEMA_ID = '_.schemas.default'
@@ -14,32 +14,17 @@ const PUBLISH_TRANSLATIONS = true
 const BASE_LANGUAGE = {id: 'fr', title: 'French'}
 const TARGET_LANGUAGES = [
   {id: 'en', title: 'English'},
-  {id: 'bg', title: 'Bulgarian'},
-  {id: 'cs', title: 'Czech'},
-  {id: 'da', title: 'Danish'},
-  {id: 'de', title: 'German'},
-  {id: 'el', title: 'Greek'},
   {id: 'es', title: 'Spanish'},
-  {id: 'et', title: 'Estonian'},
-  {id: 'fi', title: 'Finnish'},
-  {id: 'ga', title: 'Irish'},
-  {id: 'hr', title: 'Croatian'},
-  {id: 'hu', title: 'Hungarian'},
-  {id: 'it', title: 'Italian'},
-  {id: 'lt', title: 'Lithuanian'},
-  {id: 'lv', title: 'Latvian'},
-  {id: 'mt', title: 'Maltese'},
-  {id: 'nl', title: 'Dutch'},
-  {id: 'pl', title: 'Polish'},
-  {id: 'pt', title: 'Portuguese'},
-  {id: 'ro', title: 'Romanian'},
-  {id: 'sk', title: 'Slovak'},
-  {id: 'sl', title: 'Slovenian'},
-  {id: 'sv', title: 'Swedish'},
 ]
 
-// Languages translated at the same time; keeps the run well inside the function timeout
-const CONCURRENCY = 4
+// Same tone as the Studio's AI Assist. Without it, Spanish mixes "tú" and "usted" from page to page.
+const STYLE_GUIDE =
+  'Formwise is software for associations, clubs and non-profits. Warm, clear and professional tone. ' +
+  'Keep the product name Formwise, URLs and currency formats unchanged. ' +
+  'Address the reader with the formal form where the language has one (usted in Spanish), consistently throughout.'
+
+// Both languages are translated at the same time, well inside the function timeout
+const CONCURRENCY = 2
 
 // Singletons use a fixed ID per language (`settings-fr`) instead of translation metadata
 const SINGLETON_TYPES = ['settings', 'header', 'footer']
@@ -116,11 +101,15 @@ export const handler = documentEventHandler<EventData>(async ({context, event}) 
       .commit()
   }
 
+  const sourceSlug = isSingleton
+    ? undefined
+    : await client.fetch<{_type: 'slug'; current: string} | null>(`*[_id == $id][0].slug`, {id: _id})
+
   async function translateInto(language: {id: string; title: string}) {
     let targetId = isSingleton ? `${_type}-${language.id}` : existing.get(language.id)
     const isNew = !targetId
-    // Generated here (not by Sanity) because the async action returns no document, and the
-    // ID is needed to link the translation. The "tr-" prefix marks it as a translation,
+    // Generated here (not by Sanity) because the ID is needed to link the translation before
+    // it is written. The "tr-" prefix marks it as a translation,
     // which the blueprint filter excludes.
     targetId ??= `tr-${randomUUID()}`
     const writeId = PUBLISH_TRANSLATIONS ? targetId : `drafts.${targetId}`
@@ -128,7 +117,11 @@ export const handler = documentEventHandler<EventData>(async ({context, event}) 
     // Create the target with its language set before translating. Left to itself, the
     // action first writes a French copy of the source, which matches this function's
     // filter and triggers it again (recursion).
-    await client.createIfNotExists({_id: writeId, _type, language: language.id})
+    // A new translation starts with the French slug so it has a URL straight away; editors can
+    // then localise it. The translation below never touches the slug (see `target`), so a
+    // localised slug survives later updates of the French page.
+    await client.createIfNotExists({_id: writeId, _type, language: language.id, ...(sourceSlug && {slug: sourceSlug})})
+    if (sourceSlug) await client.patch(writeId).setIfMissing({slug: sourceSlug}).commit()
     if (isNew && metadataId) {
       await client
         .patch(metadataId)
@@ -144,7 +137,11 @@ export const handler = documentEventHandler<EventData>(async ({context, event}) 
       fromLanguage: BASE_LANGUAGE,
       toLanguage: language,
       forcePublishedWrite: PUBLISH_TRANSLATIONS,
-      async: true,
+      styleGuide: STYLE_GUIDE,
+      target: {exclude: ['slug']},
+      // Waits for the translation, so a failure shows up in the function logs. Queued (async)
+      // translations failed silently: pages added in October stayed empty in every language.
+      async: false,
     })
     return isNew
   }
@@ -155,5 +152,5 @@ export const handler = documentEventHandler<EventData>(async ({context, event}) 
     const results = await Promise.all(batch.map(translateInto))
     added += results.filter(Boolean).length
   }
-  console.log(`Queued ${TARGET_LANGUAGES.length} translations of ${_id} (${added} new)`)
+  console.log(`Translated ${_id} into ${TARGET_LANGUAGES.length} languages (${added} new)`)
 })
