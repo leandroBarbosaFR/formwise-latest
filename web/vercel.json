@@ -13,12 +13,27 @@
       "permanent": true
     },
     {
+      "source": "/:lang(bg|cs|da|de|el|et|fi|ga|hr|hu|it|lt|lv|mt|nl|pl|pt|ro|sk|sl|sv)/",
+      "destination": "/en/",
+      "permanent": true
+    },
+    {
       "source": "/:lang(bg|cs|da|de|el|et|fi|ga|hr|hu|it|lt|lv|mt|nl|pl|pt|ro|sk|sl|sv)/:path*",
-      "destination": "/en/:path*",
+      "destination": "/en/:path*/",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(bg|cs|da|de|el|et|fi|ga|hr|hu|it|lt|lv|mt|nl|pl|pt|ro|sk|sl|sv)/:path*/",
+      "destination": "/en/:path*/",
       "permanent": true
     },
     {
       "source": "/a-propos",
+      "destination": "/fr/about/",
+      "permanent": true
+    },
+    {
+      "source": "/a-propos/",
       "destination": "/fr/about/",
       "permanent": true
     },
@@ -28,12 +43,27 @@
       "permanent": true
     },
     {
+      "source": "/mentions-legales/",
+      "destination": "/fr/legal-notice/",
+      "permanent": true
+    },
+    {
       "source": "/politique-de-confidentialite",
       "destination": "/fr/privacy-policy/",
       "permanent": true
     },
     {
+      "source": "/politique-de-confidentialite/",
+      "destination": "/fr/privacy-policy/",
+      "permanent": true
+    },
+    {
       "source": "/preinscription-success",
+      "destination": "/fr/",
+      "permanent": true
+    },
+    {
+      "source": "/preinscription-success/",
       "destination": "/fr/",
       "permanent": true
     },
