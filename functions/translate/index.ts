@@ -118,8 +118,7 @@ export const handler = documentEventHandler<EventData>(async ({context, event}) 
     // action first writes a French copy of the source, which matches this function's
     // filter and triggers it again (recursion).
     // A new translation starts with the French slug so it has a URL straight away; editors can
-    // then localise it. The translation below never touches the slug (see `target`), so a
-    // localised slug survives later updates of the French page.
+    // then localise it. Later translations never touch the slug or SEO fields (see `target`).
     await client.createIfNotExists({_id: writeId, _type, language: language.id, ...(sourceSlug && {slug: sourceSlug})})
     if (sourceSlug) await client.patch(writeId).setIfMissing({slug: sourceSlug}).commit()
     if (isNew && metadataId) {
@@ -138,7 +137,10 @@ export const handler = documentEventHandler<EventData>(async ({context, event}) 
       toLanguage: language,
       forcePublishedWrite: PUBLISH_TRANSLATIONS,
       styleGuide: STYLE_GUIDE,
-      target: {exclude: ['slug']},
+      // An existing translation keeps its own slug and SEO fields: Translate copies the SEO
+      // block from French without translating it, which replaced reviewed English and Spanish
+      // titles and descriptions with French ones
+      target: {exclude: isNew ? ['slug'] : ['slug', 'seo']},
       // Waits for the translation, so a failure shows up in the function logs. Queued (async)
       // translations failed silently: pages added in October stayed empty in every language.
       async: false,
